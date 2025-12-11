@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { createClient } from "@/lib/supabase/client";
 
 export default function ImportLeadsPage() {
   const [file, setFile] = useState<File | null>(null);
@@ -12,7 +13,8 @@ export default function ImportLeadsPage() {
     success: number;
     errors: string[];
   } | null>(null);
-  const router = useRouter();
+
+  const supabaseClient = createClient();
 
   // Parse CSV (simple, assumes headers in first row)
   const parseCSV = (text: string) => {
@@ -55,13 +57,13 @@ export default function ImportLeadsPage() {
     // Get current user + their department
     const {
       data: { user },
-    } = await supabase.auth.getUser();
+    } = await supabaseClient.auth.getUser();
     if (!user) {
       alert("Not logged in");
       return;
     }
 
-    const { data: profile } = await supabase
+    const { data: profile } = await supabaseClient
       .from("profiles")
       .select("department")
       .eq("id", user.id)
@@ -133,14 +135,12 @@ export default function ImportLeadsPage() {
     }
 
     // Batch insert (Supabase supports up to 1000 rows per insert)
-    const { error } = await supabase.from("leads").insert(validRows);
+    const { error } = await supabaseClient.from("leads").insert(validRows);
 
     if (error) {
       setResult({ success: 0, errors: [error.message] });
     } else {
       setResult({ success: validRows.length, errors });
-      // Optionally auto-refresh / redirect after 3s
-      setTimeout(() => router.push("/leads"), 3000);
     }
 
     setImporting(false);
@@ -197,7 +197,11 @@ Jane Smith,,jane@startup.com,U12345678,,Upwork,Fintech,Needs full-stack dev for 
       )}
 
       {result ? (
-        <div className="mb-6 p-4 bg-blue-50 rounded">
+        <div
+          className={`mb-6 p-4 ${
+            result.success > 0 ? "bg-emerald-950" : "bg-rose-950"
+          } rounded`}
+        >
           <p>
             ✅ Successfully imported: <strong>{result.success}</strong> leads
           </p>
@@ -212,9 +216,12 @@ Jane Smith,,jane@startup.com,U12345678,,Upwork,Fintech,Needs full-stack dev for 
             </div>
           )}
           {result.success > 0 && (
-            <p className="mt-2 text-green-700">
-              Redirecting to leads list in 3 seconds...
-            </p>
+            <Link
+              href={"/leads"}
+              className="mt-2 text-green-700 cursor-pointer hover:underline"
+            >
+              ← Click to go back to leads page
+            </Link>
           )}
         </div>
       ) : (

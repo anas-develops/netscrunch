@@ -1,53 +1,55 @@
 // app/leads/new/page.tsx
-'use client';
-import { useState } from 'react';
-import { supabase } from '@/lib/supabase';
-import { useRouter } from 'next/navigation';
+"use client";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 
 export default function NewLeadPage() {
   const [formData, setFormData] = useState({
-    name: '',
-    company: '',
-    email: '',
-    upwork_id: '',
-    linkedin_url: '',
-    source: 'Upwork' as const,
-    industry: '',
-    description: '',
+    name: "",
+    company: "",
+    email: "",
+    upwork_id: "",
+    linkedin_url: "",
+    source: "Upwork" as const,
+    industry: "",
+    description: "",
   });
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+
+  const supabaseClient = createClient();
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     // Get current user
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabaseClient.auth.getUser();
     if (!user) return;
 
     // Get user's department from profiles
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('department')
-      .eq('id', user.id)
+    const { data: profile } = await supabaseClient
+      .from("profiles")
+      .select("department")
+      .eq("id", user.id)
       .single();
 
     if (!profile) {
-      alert('Profile not found. Please contact admin.');
+      alert("Profile not found. Please contact admin.");
       return;
     }
 
-    const { error } = await supabase
-      .from('leads')
-      .insert({
-        ...formData,
-        owner_id: user.id,
-        department: profile.department,
-      });
+    const { error } = await supabaseClient.from("leads").insert({
+      ...formData,
+      owner_id: user.id,
+      department: profile.department,
+    });
 
     if (error) alert(error.message);
-    else router.push('/leads');
+    else router.push("/leads");
     setLoading(false);
   };
 
@@ -67,7 +69,9 @@ export default function NewLeadPage() {
         {/* Company */}
         <input
           value={formData.company}
-          onChange={(e) => setFormData({ ...formData, company: e.target.value })}
+          onChange={(e) =>
+            setFormData({ ...formData, company: e.target.value })
+          }
           placeholder="Company"
           className="border p-2 w-full"
         />
@@ -75,7 +79,9 @@ export default function NewLeadPage() {
         {/* Source */}
         <select
           value={formData.source}
-          onChange={(e) => setFormData({ ...formData, source: e.target.value as any })}
+          onChange={(e) =>
+            setFormData({ ...formData, source: e.target.value as any })
+          }
           className="border p-2 w-full"
         >
           <option>Upwork</option>
@@ -95,13 +101,17 @@ export default function NewLeadPage() {
         />
         <input
           value={formData.upwork_id}
-          onChange={(e) => setFormData({ ...formData, upwork_id: e.target.value })}
+          onChange={(e) =>
+            setFormData({ ...formData, upwork_id: e.target.value })
+          }
           placeholder="Upwork ID (if applicable)"
           className="border p-2 w-full"
         />
         <input
           value={formData.linkedin_url}
-          onChange={(e) => setFormData({ ...formData, linkedin_url: e.target.value })}
+          onChange={(e) =>
+            setFormData({ ...formData, linkedin_url: e.target.value })
+          }
           placeholder="LinkedIn URL (if applicable)"
           className="border p-2 w-full"
         />
@@ -109,13 +119,17 @@ export default function NewLeadPage() {
         {/* Industry + Description */}
         <input
           value={formData.industry}
-          onChange={(e) => setFormData({ ...formData, industry: e.target.value })}
+          onChange={(e) =>
+            setFormData({ ...formData, industry: e.target.value })
+          }
           placeholder="Industry"
           className="border p-2 w-full"
         />
         <textarea
           value={formData.description}
-          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+          onChange={(e) =>
+            setFormData({ ...formData, description: e.target.value })
+          }
           placeholder="Description / Notes"
           className="border p-2 w-full"
           rows={3}
@@ -126,7 +140,7 @@ export default function NewLeadPage() {
           disabled={loading}
           className="bg-blue-600 text-white p-2 w-full"
         >
-          {loading ? 'Creating...' : 'Create Lead'}
+          {loading ? "Creating..." : "Create Lead"}
         </button>
       </form>
     </div>
