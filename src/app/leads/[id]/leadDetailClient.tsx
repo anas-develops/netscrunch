@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { format, isBefore } from "date-fns";
 import { createClient } from "@/lib/supabase/client";
+import { HandoverModal } from "./handoverModal";
 
 type Lead = {
   id: string;
@@ -55,6 +56,7 @@ export function LeadDetailClient({
   });
   const [creatingTask, setCreatingTask] = useState(false);
   const [currentStatus, setCurrentStatus] = useState(lead.status);
+  const [showHandoverModal, setShowHandoverModal] = useState(false);
 
   const statusOptions = ["Applied", "Conversation", "Interview", "Won", "Lost"];
   const taskTypes = ["Call", "Email", "Message", "Proposal", "Follow-up"];
@@ -188,10 +190,10 @@ export function LeadDetailClient({
           </div>
 
           <button
-            onClick={handleReassign}
-            className="mt-3 text-sm text-orange-600 hover:underline"
+            onClick={() => setShowHandoverModal(true)}
+            className="mt-3 text-sm text-orange-600 hover:underline flex items-center gap-1"
           >
-            ↪️ Reassign Lead (Handover)
+            ↪️ Reassign Lead
           </button>
         </div>
       </div>
@@ -335,6 +337,19 @@ export function LeadDetailClient({
           </div>
         )}
       </div>
+
+      {showHandoverModal && (
+        <HandoverModal
+          leadId={lead.id}
+          currentOwnerId={lead.owner_id}
+          onClose={() => setShowHandoverModal(false)}
+          onReassign={() => {
+            // Optional: refetch lead/tasks to reflect new owner
+            // For MVP, you can just update local state or refresh
+            router.refresh();
+          }}
+        />
+      )}
     </div>
   );
 }

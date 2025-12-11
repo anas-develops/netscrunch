@@ -274,7 +274,7 @@ export default function LeadsClient({
                     {lead.owner_id.full_name}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    {new Date(lead.created_at).toLocaleDateString()}
+                    {lead.created_at}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <Link

@@ -1,7 +1,7 @@
 "use client";
 
-import { ReactNode, useState } from "react";
-import { useRouter } from "next/navigation";
+import { ReactNode, use, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { User } from "@supabase/supabase-js";
 import Link from "next/link";
 import {
@@ -33,7 +33,7 @@ export function LayoutClient({
   };
 
   const navItems = [
-    { name: "Leads", href: "/leads", icon: Users, exact: true },
+    { name: "Leads", href: "/leads", icon: Users, exact: false },
     { name: "Deals", href: "/deals", icon: Briefcase, exact: false },
     { name: "My Tasks", href: "/tasks", icon: ClipboardList, exact: false },
     {
@@ -45,7 +45,7 @@ export function LayoutClient({
   ];
 
   // Get current path for active state
-  const pathname = window.location.pathname;
+  const pathname = usePathname();
 
   return (
     <div className="flex h-screen bg-gray-800">
