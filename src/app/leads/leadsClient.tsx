@@ -43,7 +43,7 @@ export default function LeadsClient({
 }) {
   const [leads, setLeads] = useState<{ leads: Lead[]; count: number }>({
     leads: initialData.leads || [],
-    count: 0,
+    count: initialData.count || 0,
   });
   const owners: Owner[] = initialData.owners || [];
   const [loading, setLoading] = useState(false);
@@ -67,6 +67,8 @@ export default function LeadsClient({
           PAGE_SIZE,
           currentPage
         );
+
+        console.log({ leads, count });
         setLeads({ leads, count });
       })();
     }

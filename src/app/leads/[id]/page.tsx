@@ -14,7 +14,6 @@ export default async function ViewLeadPage({
   const {
     data: { user },
   } = await supabaseServer.auth.getUser();
-  if (!user) redirect("/login");
 
   // 2. Fetch lead
   const { data: lead, error: leadErr } = await supabaseServer
@@ -44,7 +43,7 @@ export default async function ViewLeadPage({
       lead={lead}
       owner={owner}
       tasks={tasks || []}
-      userId={user.id}
+      userId={user!.id}
     />
   );
 }

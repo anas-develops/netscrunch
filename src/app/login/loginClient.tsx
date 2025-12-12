@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { redirect, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 export default function LoginClient() {
@@ -18,7 +18,7 @@ export default function LoginClient() {
       email,
       password,
     });
-    if (!error) router.push("/leads");
+    if (!error) redirect("/leads");
     else alert(error.message);
     setLoading(false);
   };

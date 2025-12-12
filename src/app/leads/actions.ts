@@ -39,7 +39,8 @@ export async function fetchLeads(
     leadDataQuery = leadDataQuery.eq("owner_id", ownerFilter);
   }
 
-  const totalRecords = (await leadDataQuery).data?.length;
+  const { data: allRecords } = await leadDataQuery;
+
   const leadDataQueryPaginated = leadDataQuery
     .order("created_at", { ascending: false })
     .range(
@@ -51,7 +52,7 @@ export async function fetchLeads(
 
   return {
     leads: (leadData as unknown as Lead[]) || [],
-    count: totalRecords || 0,
+    count: allRecords?.length || 0,
   };
 }
 

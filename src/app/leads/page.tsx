@@ -11,15 +11,6 @@ export const metadata: Metadata = {
 };
 
 export default async function LeadsPage() {
-  const supabaseServer = await createClient();
-  const {
-    data: { user },
-  } = await supabaseServer.auth.getUser();
-
-  if (!user) {
-    redirect("/login");
-  }
-
   const ownerData = await fetchData();
   const leads = await fetchLeads();
 

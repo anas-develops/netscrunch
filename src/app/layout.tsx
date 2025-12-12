@@ -29,32 +29,12 @@ export default async function RootLayout({
     data: { user },
   } = await supabaseServer.auth.getUser();
 
-  // If not authenticated, only allow /login (but layout still renders minimal shell)
-  if (!user) {
-    // You could redirect here, but better to let /login handle it
-    // We'll render a minimal layout that doesn't show sidebar/navbar
-    return (
-      <html lang="en">
-        <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-        >
-          {children}
-        </body>
-      </html>
-    );
-  }
-
   // Fetch profile
   const { data: profile } = await supabaseServer
     .from("profiles")
     .select("full_name, role")
-    .eq("id", user.id)
+    .eq("id", user?.id)
     .single();
-
-  if (!profile) {
-    // Optional: redirect to onboarding
-    redirect("/onboarding");
-  }
 
   return (
     <html lang="en">
@@ -62,9 +42,13 @@ export default async function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         {/* Pass user + profile to a CLIENT component that handles interactivity */}
-        <LayoutClient user={user} profile={profile}>
-          {children}
-        </LayoutClient>
+        {user && profile ? (
+          <LayoutClient user={user} profile={profile}>
+            {children}
+          </LayoutClient>
+        ) : (
+          <>{children}</>
+        )}
       </body>
     </html>
   );

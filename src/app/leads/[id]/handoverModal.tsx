@@ -17,29 +17,36 @@ export function HandoverModal({
   const [newOwnerId, setNewOwnerId] = useState("");
   const [note, setNote] = useState("");
   const [loading, setLoading] = useState(false);
-  const [owners, setOwners] = useState<{ id: string; full_name: string }[]>([]);
-  const [department, setDepartment] = useState("");
+  const [loadingOwners, setLoadingOwners] = useState(false);
+  const [owners, setOwners] = useState<
+    { id: string; full_name: string; department: string }[]
+  >([]);
 
   // Fetch eligible owners on open (you could pre-fetch in parent)
   useEffect(() => {
     const fetchOwners = async () => {
+      setLoadingOwners(true);
       const supabase = createClient();
-      // Get current user's department to limit scope (optional)
-      const { data: profile } = await supabase
+      let query = supabase.from("profiles").select("id, full_name, department");
+
+      const {
+        data: { user: currentLoggedInUser },
+      } = await supabase.auth.getUser();
+
+      const { data: currentLoggedInUserProfile } = await supabase
         .from("profiles")
-        .select("department")
-        .eq("id", currentOwnerId)
+        .select("department, role")
+        .eq("id", currentLoggedInUser?.id)
         .single();
 
-      if (profile) {
-        setDepartment(profile.department);
-        const { data } = await supabase
-          .from("profiles")
-          .select("id, full_name")
-          .eq("department", profile.department)
-          .neq("id", currentOwnerId); // exclude self
-        setOwners(data || []);
+      if (currentLoggedInUserProfile?.role !== "admin") {
+        //admin can assign leads across departments
+        query = query.eq("department", currentLoggedInUserProfile?.department);
       }
+
+      const { data } = await query.neq("id", currentOwnerId);
+      setOwners(data || []);
+      setLoadingOwners(false);
     };
     fetchOwners();
   }, []);
@@ -91,11 +98,14 @@ export function HandoverModal({
             value={newOwnerId}
             onChange={(e) => setNewOwnerId(e.target.value)}
             className="w-full border rounded px-3 py-2"
+            disabled={loadingOwners}
           >
-            <option value="">Select owner...</option>
+            <option disabled value="">
+              {loadingOwners ? "Loading..." : "Select owner..."}
+            </option>
             {owners.map((owner) => (
               <option key={owner.id} value={owner.id}>
-                {owner.full_name}
+                {owner.full_name} - {owner.department}
               </option>
             ))}
           </select>
