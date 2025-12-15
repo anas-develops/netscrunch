@@ -129,6 +129,12 @@ export function LeadDetailClient({
           >
             Edit
           </button>
+          <button
+            onClick={() => router.push(`/deals/new?leadId=${lead.id}`)}
+            className="text-sm text-green-600 hover:underline"
+          >
+            ➕ Create Deal from Lead
+          </button>
         </div>
       </div>
 
