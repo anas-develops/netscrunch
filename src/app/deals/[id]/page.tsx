@@ -1,7 +1,8 @@
 import { redirect, notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
-import { Deal } from "../types";
+import { Deal, Task } from "../types";
+import { TasksAndActivityLog } from "./tasksAndActivityLog";
 
 export default async function ViewDealPage({
   params,
@@ -33,6 +34,13 @@ export default async function ViewDealPage({
 
   if (!deal) notFound();
 
+  const { data: tasks } = await supabase
+    .from("tasks")
+    .select(
+      "id, type, description, due_date, completed, created_at, lead:lead_id(id, name, company, source), deal:deal_id(id, owner_name, lead_name, lead_company),owner:owner_id(full_name)"
+    )
+    .eq("deal_id", deal.id);
+
   const stageColors: Record<string, string> = {
     Prospecting: "bg-gray-100 text-gray-800",
     Qualification: "bg-blue-100 text-blue-800",
@@ -50,12 +58,17 @@ export default async function ViewDealPage({
           <h1 className="text-2xl font-bold">{deal.name}</h1>
           <p className="text-gray-600">Owner: {deal.owner_id?.full_name}</p>
         </div>
-        <Link
-          href={`/deals/${deal.id}/edit`}
-          className="text-blue-600 hover:underline"
-        >
-          ✏️ Edit
-        </Link>
+        <div className="flex gap-2">
+          <Link href="/deals" className="text-gray-600 hover:underline">
+            ← Back to All Deals
+          </Link>
+          <Link
+            href={`/deals/${deal.id}/edit`}
+            className="text-blue-600 hover:underline"
+          >
+            ✏️ Edit
+          </Link>
+        </div>
       </div>
 
       {/* Deal Info */}
@@ -111,12 +124,10 @@ export default async function ViewDealPage({
         </div>
       )}
 
-      {/* Back to Deals */}
-      <div>
-        <Link href="/deals" className="text-gray-600 hover:underline">
-          ← Back to All Deals
-        </Link>
-      </div>
+      <TasksAndActivityLog
+        deal={deal}
+        initialData={{ tasks: (tasks as unknown as Task[]) || [] }}
+      />
     </div>
   );
 }

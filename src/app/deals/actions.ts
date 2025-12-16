@@ -75,3 +75,5 @@ export async function fetchOwners() {
   const { data } = await supabase.from("profiles").select("id, full_name");
   return data;
 }
+
+export async function handleTaskSubmit(formData: FormData) {}
