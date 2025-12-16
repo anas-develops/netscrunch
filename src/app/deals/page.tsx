@@ -1,7 +1,11 @@
-// app/deals/page.tsx
 import DealsClient from "./dealsClient";
 import { fetchDeals, fetchOwners } from "./actions";
 import { Deal } from "./types";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Deals | NetScrunch by Netpace",
+};
 
 export default async function DealsPage() {
   // Initial load: page 1, no filters

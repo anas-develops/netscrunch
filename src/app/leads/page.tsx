@@ -1,23 +1,14 @@
-import { redirect } from "next/navigation";
-import LeadsClient from "./leadsClient"; // Your existing client component
-import { Lead } from "./types";
+import LeadsClient from "./leadsClient";
 import { Metadata } from "next";
-import { createClient } from "@/lib/supabase/server";
 import { fetchData, fetchLeads } from "./actions";
-import { format } from "date-fns";
 
 export const metadata: Metadata = {
-  title: "Leads",
+  title: "Lead | NetScrunch by Netpace",
 };
 
 export default async function LeadsPage() {
   const ownerData = await fetchData();
   const leads = await fetchLeads();
-
-  leads.leads = leads.leads.map((lead) => ({
-    ...lead,
-    created_at: format(new Date(lead.created_at), "MM/dd/yyyy"),
-  }));
 
   return (
     <LeadsClient

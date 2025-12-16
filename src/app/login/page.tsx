@@ -1,4 +1,9 @@
+import { Metadata } from "next";
 import { login } from "./actions";
+
+export const metadata: Metadata = {
+  title: "Login | NetScrunch by Netpace",
+};
 
 export default async function LoginPage({
   searchParams,

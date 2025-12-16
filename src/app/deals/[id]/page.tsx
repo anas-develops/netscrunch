@@ -12,12 +12,6 @@ export default async function ViewDealPage({
   const dealId = routeParams.id;
   const supabase = await createClient();
 
-  // Auth check
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
-
   // Fetch deal with linked lead + owner
   const { data: deal }: { data: Deal | null } = await supabase
     .from("deals")
@@ -93,14 +87,14 @@ export default async function ViewDealPage({
             <div>
               <p>
                 <Link
-                  href={`/leads/${deal.lead!.id}`}
+                  href={`/leads/${deal.lead_id}`}
                   className="text-blue-600 hover:underline"
                 >
-                  {deal.lead!.name}
+                  {deal.lead_name}
                 </Link>
               </p>
               <p>
-                {deal.lead!.company || "No company"} • {deal.lead!.source}
+                {deal.lead_company || "No company"} • {deal.lead!.source}
               </p>
             </div>
           ) : (

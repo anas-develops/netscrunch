@@ -232,19 +232,19 @@ export default function DealsClient({
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    {deal.lead_id ? (
+                    {deal.lead_id && deal.lead_name ? (
                       <Link
                         href={`/leads/${deal.lead_id}`}
                         className="text-blue-500 hover:underline"
                       >
-                        {deal.lead?.name}
+                        {deal.lead_name}
                       </Link>
                     ) : (
                       <span className="text-gray-400">Standalone</span>
                     )}
-                    {deal.lead?.company && (
+                    {deal.lead_company && (
                       <div className="text-sm text-gray-400">
-                        {deal.lead.company}
+                        {deal.lead_company}
                       </div>
                     )}
                   </td>
@@ -255,7 +255,7 @@ export default function DealsClient({
                     {deal.value ? `$${deal.value.toLocaleString()}` : "—"}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    {deal.owner_id.full_name}
+                    {deal.owner_name}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     {deal.close_date || "—"}

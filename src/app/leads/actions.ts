@@ -1,5 +1,6 @@
 "use server";
 
+import { format } from "date-fns";
 import { Lead } from "./types";
 import { createClient } from "@/lib/supabase/server";
 
@@ -48,7 +49,14 @@ export async function fetchLeads(
       pageSize * (currentPage - 1) + pageSize - 1
     );
 
-  const { data: leadData } = await leadDataQueryPaginated;
+  let { data: leadData } = await leadDataQueryPaginated;
+
+  if (!!leadData) {
+    leadData = leadData?.map((lead) => ({
+      ...lead,
+      created_at: format(new Date(lead.created_at), "MM/dd/yyyy"),
+    }));
+  }
 
   return {
     leads: (leadData as unknown as Lead[]) || [],

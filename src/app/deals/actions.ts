@@ -23,8 +23,10 @@ export async function fetchDeals(
         stage,
         owner_id,
         lead_id,
-        owner_id(full_name),
-        lead:lead_id(name, company, source)
+        owner_name,
+        lead_name,
+        lead_company,
+        lead:leads!lead_id (id, name, company, source)
       `,
       { count: "exact" }
     )
@@ -33,7 +35,9 @@ export async function fetchDeals(
   if (search) {
     const term = search.trim();
     if (term) {
-      query = query.or(`name.ilike.%${term}%`);
+      query = query.or(
+        `name.ilike.%${term}%,owner_name.ilike.%${term}%,lead_name.ilike.%${term}%,lead_company.ilike.%${term}%`
+      );
     }
   }
 

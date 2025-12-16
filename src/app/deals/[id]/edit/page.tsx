@@ -12,8 +12,6 @@ export default async function EditDealPage({
   const dealId = routeParams.id;
   const supabase = await createClient();
 
-  console.log("Route params", routeParams);
-
   // Auth check
   const {
     data: { user },
@@ -32,7 +30,7 @@ export default async function EditDealPage({
       notes,
       lead_id,
       owner_id(full_name),
-      lead!lead_id (id, name, company, source)
+      lead:leads!lead_id (id, name, company, source)
     `
     )
     .eq("id", dealId)

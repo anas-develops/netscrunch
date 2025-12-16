@@ -69,12 +69,14 @@ export function EditDealForm({
         </Link>
       </div>
 
-      {initialDeal.lead_id && initialDeal.lead && (
-        <div className="mb-6 p-3 bg-blue-900 border border-blue-700 rounded text-blue-200">
-          <strong>Linked to Lead:</strong> {initialDeal.lead.name} (
-          {initialDeal.lead.company || "No company"})
-        </div>
-      )}
+      {initialDeal.lead_id &&
+        initialDeal.lead_name &&
+        initialDeal.lead_company && (
+          <div className="mb-6 p-3 bg-blue-900 border border-blue-700 rounded text-blue-200">
+            <strong>Linked to Lead:</strong> {initialDeal.lead_name} (
+            {initialDeal.lead_company || "No company"})
+          </div>
+        )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <input
