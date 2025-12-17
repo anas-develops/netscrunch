@@ -1,12 +1,21 @@
-// app/tasks/page.tsx
 import { redirect } from "next/navigation";
+import TasksClient from "./tasksClient";
+import { fetchTasks, fetchTeamMembers } from "./actions";
 import { createClient } from "@/lib/supabase/server";
-import { TasksClient } from "./tasksClient";
+import { Owner, Task } from "./types";
+
+const TASK_TYPES = ["Call", "Email", "Message", "Proposal", "Follow-up"];
 
 export default async function TasksPage({
   searchParams,
 }: {
-  searchParams: { view?: string }; // 'my' or 'team'
+  searchParams: {
+    view?: string;
+    search?: string;
+    type?: string;
+    owner?: string;
+    page?: string;
+  };
 }) {
   const supabase = await createClient();
   const {
@@ -14,78 +23,57 @@ export default async function TasksPage({
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  // Fetch user profile to determine role + department
   const { data: profile } = await supabase
     .from("profiles")
-    .select("id, role, department")
+    .select("id, full_name, role, department")
     .eq("id", user.id)
     .single();
 
   if (!profile) redirect("/onboarding");
 
-  // Default to 'my' for sales reps, 'team' for managers
+  const routeSearchParams = await searchParams;
+
   const view =
-    searchParams.view || (profile.role === "manager" ? "team" : "my");
+    routeSearchParams.view === "team" && profile.role === "manager"
+      ? "team"
+      : "my";
 
-  // Fetch tasks based on view
-  let tasks;
+  const currentPage = parseInt(routeSearchParams.page || "1", 10) || 1;
+
+  // Fetch tasks
+  const { tasks, count } = await fetchTasks(
+    view,
+    user.id,
+    profile.role,
+    profile.department,
+    routeSearchParams.search || null,
+    routeSearchParams.type || null,
+    routeSearchParams.owner || null,
+    20,
+    currentPage
+  );
+
+  // Fetch team members if needed
+  let teamMembers: Owner[] = [];
   if (view === "team") {
-    // Managers see all tasks in their department
-    const { data: teamTasks } = await supabase
-      .from("tasks")
-      .select(
-        `
-        id,
-        type,
-        description,
-        due_date,
-        completed,
-        owner_id,
-        leads(name, company),
-        deals(name),
-        profiles!owner_id(full_name)
-      `
-      )
-      .eq("profiles.department", profile.department)
-      .order("due_date", { ascending: true });
-    tasks = teamTasks;
-  } else {
-    // Default: "My Tasks"
-    const { data: myTasks } = await supabase
-      .from("tasks")
-      .select(
-        `
-        id,
-        type,
-        description,
-        due_date,
-        completed,
-        owner_id,
-        leads(name, company),
-        deals(name),
-        profiles!owner_id(full_name)
-      `
-      )
-      .eq("owner_id", user.id)
-      .order("due_date", { ascending: true });
-    tasks = myTasks;
+    teamMembers = await fetchTeamMembers(profile.department);
   }
-
-  // Group tasks for UI
-  const today = new Date().toISOString().split("T")[0];
-  const overdue =
-    tasks?.filter((t: any) => !t.completed && t.due_date < today) || [];
-  const dueToday =
-    tasks?.filter((t: any) => !t.completed && t.due_date === today) || [];
-  const upcoming =
-    tasks?.filter((t: any) => !t.completed && t.due_date > today) || [];
 
   return (
     <TasksClient
-      initialTasks={{ overdue, dueToday, upcoming }}
-      currentView={view}
+      initialData={{
+        tasks: (tasks as unknown as Task[]) || [],
+        count,
+        teamMembers,
+        currentUser: { id: user.id, name: profile.full_name! },
+      }}
+      filters={{
+        view,
+        search: routeSearchParams.search || "",
+        type: routeSearchParams.type || "all",
+        owner: routeSearchParams.owner || "all",
+      }}
       role={profile.role}
-      userId={user.id}
     />
   );
 }

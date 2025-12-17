@@ -68,7 +68,6 @@ export default function LeadsClient({
           currentPage
         );
 
-        console.log({ leads, count });
         setLeads({ leads, count });
       })();
     }
