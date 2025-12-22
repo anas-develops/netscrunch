@@ -20,10 +20,11 @@ export type Deal = {
 
 export type Task = {
   id: string;
-  type: string | null;
+  type: string;
   description: string | null;
   due_date: string | null;
-  completed: boolean | null;
+  status: "pending" | "cancelled" | "completed";
+  cancel_reason: string;
   deal_id: string | null;
   lead_id: string | null;
   lead: {

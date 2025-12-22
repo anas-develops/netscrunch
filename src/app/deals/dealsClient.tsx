@@ -3,7 +3,15 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Download, Search, Filter, Briefcase, Tag, User } from "lucide-react";
+import {
+  Download,
+  Search,
+  Filter,
+  Briefcase,
+  Tag,
+  User,
+  Plus,
+} from "lucide-react";
 import Link from "next/link";
 import { fetchDeals } from "./actions";
 import { Deal, Owner } from "./types";
@@ -101,9 +109,9 @@ export default function DealsClient({
         <h1 className="text-2xl font-bold">Deals</h1>
         <button
           onClick={() => router.push("/deals/new")}
-          className="flex items-center gap-1 bg-green-600 text-white px-3 py-2 rounded text-sm"
+          className="flex items-center gap-1 bg-green-600 text-white px-3 py-2 cursor-pointer rounded text-sm"
         >
-          <Filter size={14} />
+          <Plus size={14} />
           New Deal
         </button>
       </div>

@@ -11,7 +11,7 @@ import {
   Calendar,
   AlertCircle,
   Clock,
-  CheckCircle2,
+  Plus,
 } from "lucide-react";
 import { Task } from "./types";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -68,7 +68,6 @@ export default function TasksClient({
 
   const debouncedSearch = useDebounce(search, 300);
 
-  // Update URL on filter change
   useEffect(() => {
     if (!firstLoad.current) {
       setLoading(true);
@@ -84,7 +83,6 @@ export default function TasksClient({
     firstLoad.current = false;
   }, [view, debouncedSearch, typeFilter, ownerFilter, currentPage]);
 
-  // Refetch on URL change
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
@@ -95,8 +93,6 @@ export default function TasksClient({
       setCount(data.count);
       setLoading(false);
     };
-    // For simplicity, we'll skip this and rely on full page reload
-    // In production, you'd use a Server Action call like in Leads
   }, []);
 
   const totalPages = Math.ceil(count / 20);
@@ -167,6 +163,13 @@ export default function TasksClient({
             Team Tasks
           </button>
         )}
+        <button
+          onClick={() => router.push("/tasks/new")}
+          className="ml-auto flex items-center gap-1 bg-green-600 text-white px-3 py-2 rounded cursor-pointer text-sm"
+        >
+          <Plus size={14} />
+          New Task
+        </button>
       </div>
 
       {/* Filters */}

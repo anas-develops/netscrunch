@@ -15,6 +15,7 @@ import {
   Pencil,
   Trash2,
   Eye,
+  X,
 } from "lucide-react";
 import { Task as TaskType } from "../types";
 import { createClient } from "@/lib/supabase/client";
@@ -35,6 +36,12 @@ export function ViewTaskClient({
 }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancelReason, setCancelReason] = useState("");
+
+  const handleOpenCancelModal = () => {
+    setShowCancelModal(true);
+  };
 
   const getTaskIcon = (type: string | null) => {
     switch (type) {
@@ -85,7 +92,29 @@ export function ViewTaskClient({
     const supabaseClient = createClient();
     const { error } = await supabaseClient
       .from("tasks")
-      .update({ completed: true })
+      .update({ status: "completed" })
+      .eq("id", task.id);
+
+    if (!error) {
+      location.reload();
+    }
+    setLoading(false);
+  };
+
+  const handleCancel = async () => {
+    if (!cancelReason.trim()) {
+      alert("Please provide a reason for cancellation.");
+      return;
+    }
+
+    setLoading(true);
+    const supabaseClient = createClient();
+    const { error } = await supabaseClient
+      .from("tasks")
+      .update({
+        status: "cancelled",
+        cancel_reason: cancelReason,
+      })
       .eq("id", task.id);
 
     if (!error) {
@@ -106,6 +135,25 @@ export function ViewTaskClient({
     setLoading(false);
   };
 
+  const statusBadge = () => {
+    switch (task.status) {
+      case "completed":
+        return (
+          <span className="inline-flex items-center gap-1 text-green-600">
+            <CheckCircle2 className="w-4 h-4" /> Completed
+          </span>
+        );
+      case "cancelled":
+        return (
+          <span className="inline-flex items-center gap-1 text-red-600">
+            <X className="w-4 h-4" /> Cancelled
+          </span>
+        );
+      default:
+        return <span>Pending</span>;
+    }
+  };
+
   return (
     <div className="p-6 max-w-3xl mx-auto">
       {/* Header */}
@@ -118,19 +166,21 @@ export function ViewTaskClient({
         </div>
         {canEdit && (
           <div className="flex gap-2">
-            <Link
-              href={`/tasks/${task.id}/edit`}
-              className="p-2 bg-gray-600 rounded hover:bg-gray-300 cursor-pointer"
-            >
-              <Pencil className="w-4 h-4" />
-            </Link>
-            <button
+            {task.status !== "cancelled" && (
+              <Link
+                href={`/tasks/${task.id}/edit`}
+                className="p-2 bg-gray-600 rounded hover:bg-gray-300 cursor-pointer"
+              >
+                <Pencil className="w-4 h-4" />
+              </Link>
+            )}
+            {/* <button
               onClick={handleDelete}
               disabled={loading}
               className="p-2 bg-red-600 rounded hover:bg-red-300 disabled:opacity-50 cursor-pointer"
             >
               <Trash2 className="w-4 h-4" />
-            </button>
+            </button> */}
           </div>
         )}
       </div>
@@ -160,14 +210,13 @@ export function ViewTaskClient({
             </p>
             <p>
               <strong>Status:</strong>
-              {task.completed ? (
-                <span className="inline-flex items-center gap-1 ml-2 text-green-600">
-                  <CheckCircle2 className="w-4 h-4" /> Completed
-                </span>
-              ) : (
-                <span className="ml-2">Pending</span>
-              )}
+              {statusBadge()}
             </p>
+            {task.status === "cancelled" && task.cancel_reason && (
+              <p>
+                <strong>Cancel Reason:</strong> {task.cancel_reason}
+              </p>
+            )}
           </div>
 
           <div>
@@ -208,8 +257,8 @@ export function ViewTaskClient({
       )}
 
       {/* Action Buttons */}
-      {canEdit && !task.completed && (
-        <div className="flex gap-3">
+      <div className="flex gap-3">
+        {canEdit && task.status != "cancelled" && task.status == "pending" && (
           <button
             onClick={handleComplete}
             disabled={loading}
@@ -217,12 +266,54 @@ export function ViewTaskClient({
           >
             Mark as Complete
           </button>
-          <Link
-            href="/tasks"
-            className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 cursor-pointer"
+        )}
+        {canEdit && task.status === "pending" && (
+          <button
+            onClick={handleOpenCancelModal}
+            className="bg-red-600 text-white px-4 py-2 rounded cursor-pointer hover:bg-red-700"
           >
-            Back to Tasks
-          </Link>
+            Cancel Task
+          </button>
+        )}
+        <Link
+          href="/tasks"
+          className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 cursor-pointer"
+        >
+          Back to Tasks
+        </Link>
+      </div>
+
+      {showCancelModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-800 rounded-lg p-6 w-full max-w-md">
+            <h2 className="text-xl font-bold mb-4">Cancel Task</h2>
+            <p className="text-gray-600 mb-4">
+              Please provide a reason for cancelling this task:
+            </p>
+            <textarea
+              value={cancelReason}
+              onChange={(e) => setCancelReason(e.target.value)}
+              placeholder="e.g., Lead went silent, duplicate task, etc."
+              className="w-full p-2 border rounded mb-4"
+              rows={3}
+              autoFocus
+            />
+            <div className="flex gap-2">
+              <button
+                onClick={handleCancel}
+                disabled={loading || !cancelReason.trim()}
+                className="flex-1 bg-red-600 text-white py-2 rounded cursor-pointer disabled:opacity-50"
+              >
+                {loading ? "Cancelling..." : "Confirm Cancellation"}
+              </button>
+              <button
+                onClick={() => setShowCancelModal(false)}
+                className="flex-1 bg-gray-500 py-2 rounded cursor-pointer"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

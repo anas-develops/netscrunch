@@ -1,14 +1,15 @@
+// app/tasks/[id]/edit/page.tsx
 import { redirect, notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { ViewTaskClient } from "./viewTaskClient";
-import { Task as TaskType } from "../types";
+import { EditTaskForm } from "./editTaskForm";
+import { Task as TaskType } from "../../types";
 
 type Task = TaskType & {
   owner_id: string;
   owner: { full_name: string; department: string };
 };
 
-export default async function ViewTaskPage({
+export default async function EditTaskPage({
   params,
 }: {
   params: { id: string };
@@ -54,28 +55,35 @@ export default async function ViewTaskPage({
     .eq("id", taskId)
     .single();
 
-  if (!task) {
-    notFound();
-  }
+  if (!task) notFound();
 
-  // Optional: Fetch current user's role for action permissions
+  // Fetch user profile for permissions
   const { data: profile } = await supabase
     .from("profiles")
-    .select("role, department")
+    .select("id, role, department")
     .eq("id", user.id)
     .single();
 
-  // Security: Only owner, manager (same dept), or admin can view
+  if (!profile) redirect("/onboarding");
+
   const canEdit =
     task.owner_id === user.id ||
     (profile?.role === "manager" &&
-      profile.department === task.owner.department) ||
+      task.owner?.department === profile.department) ||
     profile?.role === "admin";
 
   if (!canEdit) {
-    // Optional: Redirect to tasks list or show "unauthorized"
     redirect("/tasks");
   }
 
-  return <ViewTaskClient task={task} userId={user.id} canEdit={canEdit} />;
+  return (
+    <div className="p-6 max-w-2xl mx-auto">
+      <h1 className="text-2xl font-bold mb-6">Edit Task</h1>
+      <EditTaskForm
+        task={task as unknown as Task}
+        userId={user.id}
+        canEdit={canEdit}
+      />
+    </div>
+  );
 }

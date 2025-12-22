@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Download, Search, Filter, User, Tag } from "lucide-react";
+import { Download, Search, Filter, User, Tag, Plus } from "lucide-react";
 import { Lead, Owner } from "./types";
 import Link from "next/link";
 
@@ -128,9 +128,9 @@ export default function LeadsClient({
           </button>
           <button
             onClick={() => router.push("/leads/new")}
-            className="flex items-center gap-1 bg-green-600 text-white px-3 py-2 rounded text-sm"
+            className="flex items-center gap-1 bg-green-600 text-white px-3 py-2 rounded cursor-pointer text-sm"
           >
-            <Filter size={14} />
+            <Plus size={14} />
             New Lead
           </button>
         </div>

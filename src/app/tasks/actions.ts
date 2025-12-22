@@ -26,7 +26,6 @@ export async function fetchTasks(
         type,
         description,
         due_date,
-        completed,
         owner_id,
         lead_id,
         deal_id,
@@ -38,7 +37,7 @@ export async function fetchTasks(
       { count: "exact" }
     )
     .order("due_date", { ascending: true }) // sort by urgency (soonest first)
-    .eq("completed", false); // only show incomplete tasks
+    .eq("status", "pending"); // only show incomplete tasks
 
   // Apply view filter
   if (view === "my") {
