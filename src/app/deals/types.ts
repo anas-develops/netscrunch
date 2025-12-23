@@ -23,7 +23,7 @@ export type Task = {
   type: string | null;
   description: string | null;
   due_date: string | null;
-  completed: boolean | null;
+  status: string;
   deal_id: string | null;
   lead_id: string | null;
   lead: {

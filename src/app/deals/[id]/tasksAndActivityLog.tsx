@@ -29,7 +29,7 @@ export function TasksAndActivityLog({
     supabaseClient
       .from("tasks")
       .select(
-        "id, type, description, due_date, completed, created_at, lead:lead_id(id, name, company, source), deal:deal_id(id, owner_name, lead_name, lead_company),owner:owner_id(full_name)"
+        "id, type, description, due_date, status, created_at, lead:lead_id(id, name, company, source), deal:deal_id(id, owner_name, lead_name, lead_company),owner:owner_id(full_name)"
       )
       .eq("deal_id", deal.id)
       .then(({ data: tasks }) => {
@@ -47,7 +47,7 @@ export function TasksAndActivityLog({
       type: newTask.type,
       description: newTask.description || null,
       due_date: newTask.due_date,
-      completed: false,
+      status: "pending",
       deal_id: deal.id,
       owner_id: user.user?.id,
     });
@@ -121,7 +121,7 @@ export function TasksAndActivityLog({
               <div
                 key={task.id}
                 className={`p-3 border rounded flex justify-between items-start ${
-                  task.completed
+                  task.status === "completed"
                     ? "bg-emerald-900"
                     : !!task.due_date &&
                       isBefore(new Date(task.due_date), new Date())
@@ -144,7 +144,7 @@ export function TasksAndActivityLog({
                   </div>
                 </div>
                 <div>
-                  {task.completed ? (
+                  {task.status === "completed" ? (
                     <span className="text-gray-200">✅ Done</span>
                   ) : !!task.due_date &&
                     isBefore(new Date(task.due_date), new Date()) ? (

@@ -6,6 +6,7 @@ import Link from "next/link";
 import { format, isBefore } from "date-fns";
 import { createClient } from "@/lib/supabase/client";
 import { HandoverModal } from "./handoverModal";
+import { Task } from "../types";
 
 type Lead = {
   id: string;
@@ -25,15 +26,6 @@ type Lead = {
 type Owner = {
   id: string;
   full_name: string;
-};
-
-type Task = {
-  id: string;
-  type: string;
-  description: string | null;
-  due_date: string;
-  completed: boolean;
-  created_at: string;
 };
 
 export function LeadDetailClient({
@@ -278,9 +270,10 @@ export function LeadDetailClient({
               <div
                 key={task.id}
                 className={`p-3 border rounded flex justify-between items-start ${
-                  task.completed
+                  task.status === "completed"
                     ? "bg-green-50"
-                    : isBefore(new Date(task.due_date), new Date())
+                    : !!task.due_date &&
+                      isBefore(new Date(task.due_date), new Date())
                     ? "bg-red-50"
                     : "bg-white"
                 }`}
@@ -292,14 +285,17 @@ export function LeadDetailClient({
                   <span className="text-gray-700">
                     {task.description || "No description"}
                   </span>
-                  <div className="text-sm text-gray-500 mt-1">
-                    Due: {format(new Date(task.due_date), "MMM d, yyyy")}
-                  </div>
+                  {!!task.due_date && (
+                    <div className="text-sm text-gray-500 mt-1">
+                      Due: {format(new Date(task.due_date), "MMM d, yyyy")}
+                    </div>
+                  )}
                 </div>
                 <div>
-                  {task.completed ? (
+                  {task.status === "completed" ? (
                     <span className="text-green-600">✅ Done</span>
-                  ) : isBefore(new Date(task.due_date), new Date()) ? (
+                  ) : !!task.due_date &&
+                    isBefore(new Date(task.due_date), new Date()) ? (
                     <span className="text-red-600">⚠️ Overdue</span>
                   ) : (
                     <span className="text-gray-500">Upcoming</span>
