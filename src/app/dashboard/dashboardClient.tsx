@@ -58,7 +58,7 @@ export function DashboardClient({ metrics }: { metrics: Metric }) {
       <div className="flex border-b border-gray-700 mb-6">
         <button
           onClick={() => setActiveTab("overview")}
-          className={`px-4 py-2 font-medium ${
+          className={`px-4 py-2 font-medium cursor-pointer ${
             activeTab === "overview"
               ? "text-blue-400 border-b-2 border-blue-400"
               : "text-gray-400 hover:text-gray-300"
@@ -68,7 +68,7 @@ export function DashboardClient({ metrics }: { metrics: Metric }) {
         </button>
         <button
           onClick={() => setActiveTab("insights")}
-          className={`px-4 py-2 font-medium ${
+          className={`px-4 py-2 font-medium cursor-pointer ${
             activeTab === "insights"
               ? "text-blue-400 border-b-2 border-blue-400"
               : "text-gray-400 hover:text-gray-300"
@@ -78,7 +78,7 @@ export function DashboardClient({ metrics }: { metrics: Metric }) {
         </button>
         <button
           onClick={() => setActiveTab("team")}
-          className={`px-4 py-2 font-medium ${
+          className={`px-4 py-2 font-medium cursor-pointer ${
             activeTab === "team"
               ? "text-blue-400 border-b-2 border-blue-400"
               : "text-gray-400 hover:text-gray-300"

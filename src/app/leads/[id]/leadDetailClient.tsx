@@ -7,6 +7,7 @@ import { format, isBefore } from "date-fns";
 import { createClient } from "@/lib/supabase/client";
 import { HandoverModal } from "./handoverModal";
 import { Task } from "../types";
+import { ActivityTimeline } from "@/app/common/activityTimeline";
 
 type Lead = {
   id: string;
@@ -74,7 +75,7 @@ export function LeadDetailClient({
       type: newTask.type,
       description: newTask.description || null,
       due_date: newTask.due_date,
-      completed: false,
+      status: "pending",
       lead_id: lead.id,
       owner_id: userId,
     });
@@ -307,38 +308,7 @@ export function LeadDetailClient({
         )}
       </div>
 
-      {/* Activity Feed */}
-      <div>
-        <h2 className="text-xl font-semibold mb-4">Activity Feed</h2>
-        {tasks.length === 0 ? (
-          <p className="text-gray-500">No activity yet.</p>
-        ) : (
-          <div className="space-y-3">
-            {[...tasks]
-              .sort(
-                (a, b) =>
-                  new Date(b.created_at).getTime() -
-                  new Date(a.created_at).getTime()
-              )
-              .map((task) => (
-                <div
-                  key={task.id}
-                  className="p-3 border-l-4 border-blue-500 bg-gray-50"
-                >
-                  <p>
-                    <strong>{task.type}</strong> created for {lead.name}
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    {format(new Date(task.created_at), "MMM d, yyyy HH:mm")}
-                  </p>
-                  {task.description && (
-                    <p className="mt-1">{task.description}</p>
-                  )}
-                </div>
-              ))}
-          </div>
-        )}
-      </div>
+      {lead && <ActivityTimeline entityType="lead" entityId={lead.id} />}
 
       {showHandoverModal && (
         <HandoverModal

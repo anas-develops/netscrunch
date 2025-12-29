@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { Deal, Task } from "../types";
 import { TasksAndActivityLog } from "./tasksAndActivityLog";
+import { ActivityTimeline } from "@/app/common/activityTimeline";
 
 export default async function ViewDealPage({
   params,
@@ -124,10 +125,11 @@ export default async function ViewDealPage({
         </div>
       )}
 
-      <TasksAndActivityLog
+      {/* <TasksAndActivityLog
         deal={deal}
         initialData={{ tasks: (tasks as unknown as Task[]) || [] }}
-      />
+      /> */}
+      {deal && <ActivityTimeline entityType="deal" entityId={deal.id} />}
     </div>
   );
 }

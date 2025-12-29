@@ -26,7 +26,5 @@ export default async function DashboardPage() {
   // Fetch dashboard metrics
   const { data: metrics } = await supabase.rpc("get_dashboard_metrics");
 
-  console.log("metrics", metrics);
-
   return <DashboardClient metrics={metrics} />;
 }

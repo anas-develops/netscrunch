@@ -63,17 +63,17 @@ export function HandoverModal({
       .update({ owner_id: newOwnerId })
       .eq("id", leadId);
 
-    // 2. Log handover as task/activity (optional but recommended)
-    if (!leadErr) {
-      await supabase.from("tasks").insert({
-        type: "Handover",
-        description: note || `Lead reassigned from current owner`,
-        lead_id: leadId,
-        owner_id: currentOwnerId,
-        due_date: new Date().toISOString().split("T")[0],
-        completed: true,
-      });
-    }
+    // // 2. Log handover as task/activity (optional but recommended)
+    // if (!leadErr) {
+    //   await supabase.from("tasks").insert({
+    //     type: "Handover",
+    //     description: note || `Lead reassigned from current owner`,
+    //     lead_id: leadId,
+    //     owner_id: currentOwnerId,
+    //     due_date: new Date().toISOString().split("T")[0],
+    //     completed: true,
+    //   });
+    // }
 
     setLoading(false);
     if (!leadErr) {
