@@ -234,7 +234,7 @@ export function ViewTaskClient({
             <div className="flex items-center gap-2">
               <Eye className="w-4 h-4 text-sky-400" />
               <Link
-                href={`/leads/${task.lead.id}`}
+                href={`/leads/${task.lead_id}`}
                 className="text-sky-400 hover:underline"
               >
                 Lead: {task.lead.name}{" "}
@@ -246,7 +246,7 @@ export function ViewTaskClient({
             <div className="flex items-center gap-2">
               <Eye className="w-4 h-4 text-blue-400" />
               <Link
-                href={`/deals/${task.deal.id}`}
+                href={`/deals/${task.deal_id}`}
                 className="text-blue-400 hover:underline"
               >
                 Deal: {task.deal.lead_name}

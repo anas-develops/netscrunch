@@ -275,12 +275,12 @@ export function LeadDetailClient({
                     ? "bg-green-50"
                     : !!task.due_date &&
                       isBefore(new Date(task.due_date), new Date())
-                    ? "bg-red-50"
+                    ? "bg-red-100"
                     : "bg-white"
                 }`}
               >
                 <div>
-                  <span className="inline-block px-2 py-1 text-xs font-semibold bg-gray-200 rounded mr-2">
+                  <span className="inline-block px-2 py-1 text-xs font-semibold bg-gray-700 rounded mr-2">
                     {task.type}
                   </span>
                   <span className="text-gray-700">

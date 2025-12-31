@@ -11,6 +11,7 @@ import {
   ClipboardList,
   Menu,
   Power,
+  History,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
@@ -33,15 +34,18 @@ export function LayoutClient({
   };
 
   const navItems = [
-    { name: "Leads", href: "/leads", icon: Users, exact: false },
-    { name: "Deals", href: "/deals", icon: Briefcase, exact: false },
-    { name: "My Tasks", href: "/tasks", icon: ClipboardList, exact: false },
     {
       name: "Dashboard",
       href: "/dashboard",
       icon: LayoutDashboard,
       exact: false,
     },
+    { name: "Leads", href: "/leads", icon: Users, exact: false },
+    { name: "Deals", href: "/deals", icon: Briefcase, exact: false },
+    { name: "My Tasks", href: "/tasks", icon: ClipboardList, exact: false },
+    ...(profile.role === "admin" || profile.role === "manager"
+      ? [{ name: "Activity Log", href: "/activity", icon: History }]
+      : []),
   ];
 
   // Get current path for active state

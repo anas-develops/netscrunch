@@ -1,7 +1,32 @@
 import { redirect } from "next/navigation";
+import { GlobalActivityClient } from "./globalActivityClient";
+import { fetchGlobalActivities, fetchTeamMembers } from "./actions";
 import { createClient } from "@/lib/supabase/server";
 
-export default async function GlobalActivityPage() {
+const ENTITY_TYPES = ["all", "lead", "deal", "task"];
+const SOURCES = [
+  "all",
+  "Upwork",
+  "Recruitment",
+  "B2B",
+  "Freelancer",
+  "Referral",
+];
+
+export default async function GlobalActivityPage({
+  searchParams,
+}: {
+  searchParams: {
+    user?: string;
+    startDate?: string;
+    endDate?: string;
+    entityType?: string;
+    source?: string;
+    page?: string;
+  };
+}) {
+  const routeSearchParams = await searchParams;
+
   const supabase = await createClient();
   const {
     data: { user },
@@ -10,45 +35,38 @@ export default async function GlobalActivityPage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("role")
+    .select("role, department")
     .eq("id", user.id)
     .single();
 
+  // Only admin/manager can access
   if (profile?.role !== "admin" && profile?.role !== "manager") {
     redirect("/dashboard");
   }
 
-  const { data: activities } = await supabase
-    .from("activity_log")
-    .select(
-      `
-      id,
-      timestamp,
-      action_type,
-      entity_type,
-      entity_id,
-      metadata,
-      user:profiles!user_id (full_name)
-    `
-    )
-    .order("timestamp", { ascending: false })
-    .limit(100); // Add pagination later
+  const currentPage = parseInt(routeSearchParams.page || "1", 10) || 1;
+
+  // Fetch data
+  const filters = {
+    userId: routeSearchParams.user || null,
+    startDate: routeSearchParams.startDate || null,
+    endDate: routeSearchParams.endDate || null,
+    entityType: routeSearchParams.entityType || "all",
+    source: routeSearchParams.source || "all",
+  };
+
+  const { activities, count } = await fetchGlobalActivities(
+    filters,
+    currentPage
+  );
+  const teamMembers = await fetchTeamMembers();
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6">Global Activity Feed</h1>
-      {/* Add filters: user, date range, entity type */}
-      <div className="space-y-4">
-        {activities?.map((activity) => (
-          <div key={activity.id} className="p-4 border rounded">
-            <div className="font-medium">{activity.user.full_name}</div>
-            <div>{activity.action_type}</div>
-            <div className="text-sm text-gray-600">
-              {new Date(activity.timestamp).toLocaleString()}
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
+    <GlobalActivityClient
+      initialData={{ activities, count, teamMembers }}
+      filters={filters}
+      currentPage={currentPage}
+      role={profile.role}
+    />
   );
 }
