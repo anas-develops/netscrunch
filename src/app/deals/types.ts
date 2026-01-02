@@ -5,6 +5,7 @@ export type Deal = {
   close_date: string | null;
   stage: string;
   owner_id: { full_name: string };
+  owner_user_id: string;
   lead_id: string | null;
   owner_name: string | null;
   lead_name: string | null;

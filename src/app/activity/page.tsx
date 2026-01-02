@@ -51,8 +51,7 @@ export default async function GlobalActivityPage({
     userId: routeSearchParams.user || null,
     startDate: routeSearchParams.startDate || null,
     endDate: routeSearchParams.endDate || null,
-    entityType: routeSearchParams.entityType || "all",
-    source: routeSearchParams.source || "all",
+    entityType: routeSearchParams.entityType || null,
   };
 
   const { activities, count } = await fetchGlobalActivities(

@@ -4,7 +4,10 @@ import { createClient } from "@/lib/supabase/server";
 
 export async function fetchGlobalActivities(
   filters: {
-    /* ... */
+    userId: string | null;
+    startDate: string | null;
+    endDate: string | null;
+    entityType: "deal" | "lead" | "task" | null;
   },
   currentPage: number = 1,
   pageSize: number = 50
@@ -30,6 +33,24 @@ export async function fetchGlobalActivities(
     .order("timestamp", { ascending: false });
 
   // ... apply filters ...
+
+  if (!!filters.userId) {
+    query = query.eq("user_id", filters.userId);
+  }
+
+  if (!!filters.startDate) {
+    query = query.gte("timestamp", filters.startDate);
+  }
+
+  if (!!filters.endDate) {
+    query = query.lte("timestamp", filters.endDate);
+  }
+
+  console.log("filters", filters);
+
+  if (!!filters.entityType) {
+    query = query.eq("entity_type", filters.entityType);
+  }
 
   const from = (currentPage - 1) * pageSize;
   const to = from + pageSize - 1;

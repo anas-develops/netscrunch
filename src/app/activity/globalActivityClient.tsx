@@ -1,4 +1,3 @@
-// app/activity/GlobalActivityClient.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -19,19 +18,10 @@ type Activity = {
 type TeamMember = { id: string; full_name: string };
 
 const ENTITY_TYPES = [
-  { value: "all", label: "All Entities" },
+  { value: "", label: "All Entities" },
   { value: "lead", label: "Leads" },
   { value: "deal", label: "Deals" },
   { value: "task", label: "Tasks" },
-];
-
-const SOURCES = [
-  { value: "all", label: "All Sources" },
-  { value: "Upwork", label: "Upwork" },
-  { value: "Recruitment", label: "Recruitment" },
-  { value: "B2B", label: "B2B" },
-  { value: "Freelancer", label: "Freelancer" },
-  { value: "Referral", label: "Referral" },
 ];
 
 export function GlobalActivityClient({
@@ -52,8 +42,9 @@ export function GlobalActivityClient({
   const router = useRouter();
   const searchParams = useSearchParams();
   const [localFilters, setLocalFilters] = useState(filters);
-  const [activities, setActivities] = useState(initialData.activities);
   const [loading, setLoading] = useState(false);
+
+  const { activities } = initialData;
 
   // Update filters in URL
   useEffect(() => {
@@ -61,27 +52,12 @@ export function GlobalActivityClient({
     if (localFilters.userId) params.set("user", localFilters.userId);
     if (localFilters.startDate) params.set("startDate", localFilters.startDate);
     if (localFilters.endDate) params.set("endDate", localFilters.endDate);
-    if (localFilters.entityType !== "all")
+    if (!!localFilters.entityType)
       params.set("entityType", localFilters.entityType);
-    if (localFilters.source !== "all")
-      params.set("source", localFilters.source);
     if (currentPage > 1) params.set("page", currentPage.toString());
 
     router.push(`/activity?${params.toString()}`);
   }, [localFilters, currentPage]);
-
-  // Apply source filter client-side (MVP)
-  useEffect(() => {
-    let filtered = initialData.activities;
-
-    if (localFilters.source && localFilters.source !== "all") {
-      filtered = filtered.filter(
-        (a) => a.resolved_source === localFilters.source
-      );
-    }
-
-    setActivities(filtered);
-  }, [initialData.activities, localFilters.source]);
 
   const handleFilterChange = (key: string, value: string) => {
     setLocalFilters((prev) => ({ ...prev, [key]: value }));
@@ -105,8 +81,6 @@ export function GlobalActivityClient({
 
   const getEntityDisplay = (activity: any) => {
     const entity = activity.linkedEntity;
-
-    console.log("entity", entity);
 
     if (!entity) return "Unknown Entity";
 
@@ -136,62 +110,61 @@ export function GlobalActivityClient({
       <h1 className="text-2xl font-bold mb-6">Global Activity Feed</h1>
 
       {/* Filters */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         {/* User */}
-        <select
-          value={localFilters.userId || ""}
-          onChange={(e) => handleFilterChange("userId", e.target.value)}
-          className="border rounded p-2"
-        >
-          <option value="">All Users</option>
-          {initialData.teamMembers.map((user) => (
-            <option key={user.id} value={user.id}>
-              {user.full_name}
-            </option>
-          ))}
-        </select>
+        <div>
+          <label className="block text-sm font-medium mb-1">User</label>
+          <select
+            value={localFilters.userId || ""}
+            onChange={(e) => handleFilterChange("userId", e.target.value)}
+            className="border rounded p-2 w-full"
+          >
+            <option value="">All Users</option>
+            {initialData.teamMembers.map((user) => (
+              <option key={user.id} value={user.id}>
+                {user.full_name}
+              </option>
+            ))}
+          </select>
+        </div>
 
         {/* Entity Type */}
-        <select
-          value={localFilters.entityType}
-          onChange={(e) => handleFilterChange("entityType", e.target.value)}
-          className="border rounded p-2"
-        >
-          {ENTITY_TYPES.map((type) => (
-            <option key={type.value} value={type.value}>
-              {type.label}
-            </option>
-          ))}
-        </select>
+        <div>
+          <label className="block text-sm font-medium mb-1">Entity Type</label>
+          <select
+            value={localFilters.entityType}
+            onChange={(e) => handleFilterChange("entityType", e.target.value)}
+            className="border rounded p-2 w-full"
+          >
+            {ENTITY_TYPES.map((type) => (
+              <option key={type.value} value={type.value}>
+                {type.label}
+              </option>
+            ))}
+          </select>
+        </div>
 
-        {/* Source */}
-        <select
-          value={localFilters.source}
-          onChange={(e) => handleFilterChange("source", e.target.value)}
-          className="border rounded p-2"
-        >
-          {SOURCES.map((source) => (
-            <option key={source.value} value={source.value}>
-              {source.label}
-            </option>
-          ))}
-        </select>
+        {/* Start Date */}
+        <div>
+          <label className="block text-sm font-medium mb-1">Start Date</label>
+          <input
+            type="date"
+            value={localFilters.startDate || ""}
+            onChange={(e) => handleDateChange("start", e.target.value)}
+            className="border rounded p-2 w-full"
+          />
+        </div>
 
-        {/* Date Range */}
-        <input
-          type="date"
-          value={localFilters.startDate || ""}
-          onChange={(e) => handleDateChange("start", e.target.value)}
-          className="border rounded p-2"
-          placeholder="Start Date"
-        />
-        <input
-          type="date"
-          value={localFilters.endDate || ""}
-          onChange={(e) => handleDateChange("end", e.target.value)}
-          className="border rounded p-2"
-          placeholder="End Date"
-        />
+        {/* End Date */}
+        <div>
+          <label className="block text-sm font-medium mb-1">End Date</label>
+          <input
+            type="date"
+            value={localFilters.endDate || ""}
+            onChange={(e) => handleDateChange("end", e.target.value)}
+            className="border rounded p-2 w-full"
+          />
+        </div>
       </div>
 
       {/* Results */}

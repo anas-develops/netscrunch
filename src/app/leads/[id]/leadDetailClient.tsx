@@ -283,9 +283,11 @@ export function LeadDetailClient({
                   <span className="inline-block px-2 py-1 text-xs font-semibold bg-gray-700 rounded mr-2">
                     {task.type}
                   </span>
-                  <span className="text-gray-700">
-                    {task.description || "No description"}
-                  </span>
+                  <Link href={`/tasks/${task.id}`}>
+                    <span className="text-gray-700 hover:underline">
+                      {task.description || "No description"}
+                    </span>
+                  </Link>
                   {!!task.due_date && (
                     <div className="text-sm text-gray-500 mt-1">
                       Due: {format(new Date(task.due_date), "MMM d, yyyy")}
