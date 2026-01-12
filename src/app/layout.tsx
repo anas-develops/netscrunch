@@ -32,7 +32,7 @@ export default async function RootLayout({
   // Fetch profile
   const { data: profile } = await supabaseServer
     .from("profiles")
-    .select("full_name, role")
+    .select("full_name, role, department")
     .eq("id", user?.id)
     .single();
 

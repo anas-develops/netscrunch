@@ -12,8 +12,11 @@ import {
   Menu,
   Power,
   History,
+  UserStar,
+  UserSearch,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { hr } from "date-fns/locale";
 
 export function LayoutClient({
   user,
@@ -21,7 +24,7 @@ export function LayoutClient({
   children,
 }: {
   user: User;
-  profile: { full_name: string; role: string };
+  profile: { full_name: string; role: string; department: string };
   children: ReactNode;
 }) {
   const supabaseClient = createClient();
@@ -40,6 +43,24 @@ export function LayoutClient({
       icon: LayoutDashboard,
       exact: false,
     },
+    ...(profile.department === "B2B"
+      ? [
+          {
+            name: "ICPs",
+            href: "/intended-customer-profiles",
+            icon: UserStar,
+          },
+        ]
+      : []),
+    ...(profile.department === "B2B"
+      ? [
+          {
+            name: "Prospects",
+            href: "/prospects",
+            icon: UserSearch,
+          },
+        ]
+      : []),
     { name: "Leads", href: "/leads", icon: Users, exact: false },
     { name: "Deals", href: "/deals", icon: Briefcase, exact: false },
     { name: "My Tasks", href: "/tasks", icon: ClipboardList, exact: false },
