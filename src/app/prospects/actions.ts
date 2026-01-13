@@ -1,52 +1,53 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { IntendedCustomerProfile } from "./types";
+import { Prospect } from "./types";
 import { format } from "date-fns";
 
-export async function fetchIcps(
+export async function fetchProspects(
   search?: string | null,
+  icpFilter?: string | null,
   ownerFilter?: string | null,
   pageSize: number = 20,
   currentPage: number = 1
 ) {
   const supabaseServer = await createClient();
-  let icpDataQuery = supabaseServer
-    .from("intended_customer_profiles")
+  let prospectsDataQuery = supabaseServer
+    .from("prospects")
     .select(
       "id, title, description, tag_color, owner:owner_id(full_name), created_at"
     );
 
   if (!!search) {
-    icpDataQuery = icpDataQuery.or(
+    prospectsDataQuery = prospectsDataQuery.or(
       `title.ilike.%${search}%,description.ilike.%${search}%`
     );
   }
 
   if (!!ownerFilter && ownerFilter !== "all") {
-    icpDataQuery = icpDataQuery.eq("owner_id", ownerFilter);
+    prospectsDataQuery = prospectsDataQuery.eq("owner_id", ownerFilter);
   }
 
-  const { data: allRecords } = await icpDataQuery;
+  const { data: allRecords } = await prospectsDataQuery;
 
-  const icpDataQueryPaginated = icpDataQuery
+  const prospectsDataQueryPaginated = prospectsDataQuery
     .order("created_at", { ascending: false })
     .range(
       pageSize * (currentPage - 1),
       pageSize * (currentPage - 1) + pageSize - 1
     );
 
-  let { data: icpData } = await icpDataQueryPaginated;
+  let { data: prospectsData } = await prospectsDataQueryPaginated;
 
-  if (!!icpData) {
-    icpData = icpData?.map((lead) => ({
+  if (!!prospectsData) {
+    prospectsData = prospectsData?.map((lead) => ({
       ...lead,
       created_at: format(new Date(lead.created_at), "MM/dd/yyyy"),
     }));
   }
 
   return {
-    icps: (icpData as unknown as IntendedCustomerProfile[]) || [],
+    prospects: (prospectsData as unknown as Prospect[]) || [],
     count: allRecords?.length || 0,
   };
 }

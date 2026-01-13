@@ -30,8 +30,6 @@ export default function IntendedCustomerProfilesClient({
   >;
   fetchIcps: (
     search?: string | null,
-    statusFilter?: string | null,
-    sourceFilter?: string | null,
     ownerFilter?: string | null,
     pageSize?: number,
     currentPage?: number
@@ -68,8 +66,6 @@ export default function IntendedCustomerProfilesClient({
       (async function () {
         const { icps, count } = await fetchIcps(
           search,
-          statusFilter,
-          sourceFilter,
           ownerFilter,
           PAGE_SIZE,
           currentPage
@@ -80,7 +76,7 @@ export default function IntendedCustomerProfilesClient({
     }
 
     firstLoad.current = false;
-  }, [search, statusFilter, sourceFilter, ownerFilter, currentPage]);
+  }, [search, ownerFilter, currentPage]);
 
   const totalPages = Math.ceil(icps.count / PAGE_SIZE);
 

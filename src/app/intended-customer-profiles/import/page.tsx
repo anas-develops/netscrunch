@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import { getRandomColorHex } from "@/lib/utils/general";
 
 export default function ImportIntendedCustomerProfilesPage() {
   const [file, setFile] = useState<File | null>(null);
@@ -79,11 +80,13 @@ export default function ImportIntendedCustomerProfilesPage() {
     const text = await file.text();
     const rows = parseCSV(text);
 
-    const requiredFields = ["name", "source"];
+    const requiredFields = ["title"];
     const validRows: any[] = [];
     const errors: string[] = [];
 
     rows.forEach((row, idx) => {
+      console.log("row", row);
+
       // Validate required
       const missing = requiredFields.filter(
         (f) => !row[f] || row[f].trim() === ""
@@ -99,12 +102,16 @@ export default function ImportIntendedCustomerProfilesPage() {
       validRows.push({
         title: row.title,
         description: row.description || null,
-        tag_color: "",
+        tag_color: getRandomColorHex(),
+        owner_id: user.id,
       });
     });
 
     if (validRows.length === 0) {
-      setResult({ success: 0, errors: ["No valid rows to import."] });
+      setResult({
+        success: 0,
+        errors: [...errors, "No valid rows to import."],
+      });
       setImporting(false);
       return;
     }
