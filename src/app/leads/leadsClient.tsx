@@ -278,12 +278,22 @@ export default function LeadsClient({
                     {lead.created_at}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <Link
-                      href={`/leads/${lead.id}`}
-                      className="text-blue-500 font-bold cursor-pointer hover:text-blue-200"
-                    >
-                      View
-                    </Link>
+                    <div className="flex justify-between">
+                      <Link
+                        href={`/leads/${lead.id}`}
+                        className="text-blue-500 font-bold cursor-pointer hover:text-blue-200"
+                      >
+                        View
+                      </Link>
+                      {!!lead.prospect_id && (
+                        <Link
+                          href={`/prospects/${lead.prospect_id}`}
+                          className="text-blue-500 font-bold cursor-pointer hover:text-blue-200"
+                        >
+                          View Prospect
+                        </Link>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}

@@ -27,3 +27,8 @@ export type TaggedIcp = {
   title: string;
   tag_color: string;
 };
+
+export type IntendedCustomerProfile = {
+  id: string;
+  title: string;
+};

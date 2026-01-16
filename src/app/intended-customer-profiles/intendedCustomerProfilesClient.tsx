@@ -2,9 +2,18 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Download, Search, Filter, User, Tag, Plus } from "lucide-react";
+import {
+  Download,
+  Search,
+  Filter,
+  User,
+  Tag,
+  Plus,
+  CopyIcon,
+} from "lucide-react";
 import { IntendedCustomerProfile, Owner } from "./types";
 import Link from "next/link";
+import { copyToClipboard } from "@/lib/utils/general";
 
 const PAGE_SIZE = 20;
 const STATUS_OPTIONS = ["Applied", "Conversation", "Interview", "Won", "Lost"];
@@ -206,6 +215,9 @@ export default function IntendedCustomerProfilesClient({
                   Title
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
+                  Copy Tag ID
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
                   Description
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
@@ -230,6 +242,12 @@ export default function IntendedCustomerProfilesClient({
                       <Tag className="h-4 w-4 mr-1 text-gray-500" />
                       <span className="font-medium">{icp.title}</span>
                     </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <CopyIcon
+                      onClick={() => copyToClipboard(icp.id)}
+                      className="cursor-pointer hover:brightness-75"
+                    />
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     {icp.description.slice(0, 20) + "..."}

@@ -19,7 +19,7 @@ export async function fetchLeads(
   let leadDataQuery = supabaseServer
     .from("leads")
     .select(
-      "id, name, company, source, status, owner_id(full_name), created_at"
+      "id, name, company, source, status, prospect_id, owner_id(full_name), created_at"
     );
 
   if (!!search) {

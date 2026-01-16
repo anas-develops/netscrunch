@@ -1,0 +1,368 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { Download, Search, Filter, User, Tag, Plus } from "lucide-react";
+import { Prospect, Owner, IntendedCustomerProfile } from "./types";
+import Link from "next/link";
+import Select from "react-select";
+import { components } from "react-select";
+import { fetchProspects } from "./actions";
+
+const PAGE_SIZE = 20;
+
+export default function ProspectsClient({
+  initialData,
+}: {
+  initialData: {
+    prospects: Prospect[];
+    owners: Array<Owner & { value: string; label: string }> | null;
+    icps: Array<
+      IntendedCustomerProfile & { value: string; label: string }
+    > | null;
+    count: number;
+  };
+}) {
+  const [prospects, setProspects] = useState<{
+    prospects: Prospect[];
+    count: number;
+  }>({
+    prospects: initialData.prospects || [],
+    count: initialData.count || 0,
+  });
+  const [loading, setLoading] = useState(false);
+  const [search, setSearch] = useState("");
+  const [ownerFilter, setOwnerFilter] = useState<string>("all");
+  const [icpFilter, setIcpFilter] = useState<string>("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const router = useRouter();
+
+  const firstLoad = useRef(true);
+
+  // Custom Option component to display color in the ICP dropdown
+  const CustomIcpOption = (props: any) => {
+    const { data } = props;
+    return (
+      <components.Option {...props}>
+        <div className="flex items-center">
+          <div
+            className="w-4 h-4 rounded mr-2 border border-gray-300"
+            style={{ backgroundColor: data.tag_color }}
+          />
+          <span className="text-black">{data.label}</span>
+        </div>
+      </components.Option>
+    );
+  };
+
+  // Custom SingleValue component to ensure black text for owner select
+  const CustomSingleValue = (props: any) => {
+    return (
+      <components.Option {...props}>
+        <div className="flex items-center">
+          <span className="text-black">{props.data.label}</span>
+        </div>
+      </components.Option>
+    );
+  };
+
+  useEffect(() => {
+    if (!firstLoad.current) {
+      (async function () {
+        console.log("icpFilter", icpFilter);
+
+        const { prospects, count } = await fetchProspects(
+          search,
+          ownerFilter,
+          icpFilter,
+          PAGE_SIZE,
+          currentPage
+        );
+
+        setProspects({ prospects, count });
+      })();
+    }
+
+    firstLoad.current = false;
+  }, [search, ownerFilter, icpFilter, currentPage]);
+
+  const totalPages = Math.ceil(prospects.count / PAGE_SIZE);
+
+  if (loading) {
+    return (
+      <div className="p-8">
+        <div className="animate-pulse space-y-4">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="h-16 bg-gray-200 rounded"></div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-4 md:p-8">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+        <h1 className="text-2xl font-bold">Prospects</h1>
+        <div className="flex gap-2">
+          <button
+            onClick={() => router.push("/prospects/import")}
+            className="flex items-center gap-1 bg-green-800 text-white px-3 py-2 rounded text-sm"
+          >
+            <Download size={14} />
+            Import Prospects
+          </button>
+          <button
+            onClick={() => router.push("/prospects/new")}
+            className="flex items-center gap-1 bg-green-600 text-white px-3 py-2 rounded cursor-pointer text-sm"
+          >
+            <Plus size={14} />
+            New Prospect
+          </button>
+        </div>
+      </div>
+
+      {/* Filters & Search */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+        {/* Search */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+          <input
+            type="text"
+            placeholder="Search name or company..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 border rounded"
+          />
+        </div>
+
+        {/* Owner */}
+        <Select
+          options={[
+            { value: "all", label: "All Owners" },
+            ...(initialData.owners || []),
+          ]}
+          value={
+            ownerFilter === "all"
+              ? { value: "all", label: "All Owners" }
+              : (initialData.owners || []).find(
+                  (owner) => owner.value === ownerFilter
+                )
+          }
+          onChange={(selected) => setOwnerFilter(selected?.value || "all")}
+          placeholder="Select Owner"
+          components={{
+            Option: CustomSingleValue,
+          }}
+        />
+
+        {/* ICP */}
+        <Select
+          options={[
+            { value: "all", label: "All ICP Tags" },
+            ...(initialData.icps || []),
+          ]}
+          value={
+            icpFilter === "all"
+              ? { value: "all", label: "All ICP Tags" }
+              : (initialData.icps || []).find((icp) => icp.value === icpFilter)
+          }
+          onChange={(selected) => {
+            setIcpFilter(selected?.value || "all");
+          }}
+          placeholder="Select ICP Tag"
+          components={{
+            Option: CustomIcpOption,
+          }}
+        />
+
+        {/* Clear Filters */}
+        {(search || ownerFilter !== "all" || icpFilter !== "all") && (
+          <button
+            onClick={() => {
+              setSearch("");
+              setOwnerFilter("all");
+              setIcpFilter("all");
+            }}
+            className="text-sm text-red-600 hover:underline self-end"
+          >
+            Clear filters
+          </button>
+        )}
+      </div>
+
+      {/* Results Count */}
+      <div className="mb-4 text-sm text-gray-600">
+        Showing <strong>{prospects.prospects?.length}</strong> of{" "}
+        <strong>{prospects.count}</strong> profiles
+      </div>
+
+      {/* Table */}
+      {prospects.prospects?.length === 0 ? (
+        <div className="text-center py-12 text-gray-500">
+          No prospects found. Try adjusting your filters.
+        </div>
+      ) : (
+        <div className="overflow-x-auto bg-white rounded-lg border">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-900">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
+                  Name
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
+                  ICP Tag
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
+                  Created By
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
+                  Company
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
+                  Title
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
+                  Phone
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
+                  Email
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
+                  Website
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
+                  City
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
+                  State
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
+                  Zip Code
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
+                  LinkedIn
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
+                  Job Board
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
+                  Created
+                </th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-200 uppercase tracking-wider">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-gray-700 divide-y divide-gray-200">
+              {prospects.prospects?.map((prospect) => (
+                <tr key={prospect.id} className="hover:bg-gray-800">
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className="font-medium">{prospect.name}</span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div
+                      className="flex items-center rounded-md justify-center"
+                      style={{ backgroundColor: prospect.tagged_icp.tag_color }}
+                    >
+                      <Tag className="h-4 w-4 mr-1 text-gray-500" />
+                      <span className="font-medium">
+                        {prospect.tagged_icp.title}
+                      </span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {prospect.owner.full_name}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {prospect.company || "-"}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {prospect.job_title || "-"}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {prospect.phone || "-"}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {prospect.email || "-"}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {prospect.website || "-"}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {prospect.city || "-"}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {prospect.state || "-"}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {prospect.zip_code || "-"}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {prospect.linked_in_url || "-"}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {prospect.company_jobs_board_url ? (
+                      <Link
+                        href={prospect.company_jobs_board_url}
+                        className="text-blue-500 font-bold cursor-pointer hover:text-blue-200"
+                        target="_blank"
+                      >
+                        Visit
+                      </Link>
+                    ) : (
+                      "-"
+                    )}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm">
+                    {prospect.created_at}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <div className="flex justify-between items-center gap-2">
+                      <Link
+                        href={`/prospects/${prospect.id}/edit`}
+                        className="text-blue-500 font-bold cursor-pointer hover:text-blue-200"
+                      >
+                        Edit
+                      </Link>
+                      <Link
+                        href={`/leads/new?prospect_id=${prospect.id}`}
+                        className="text-blue-500 font-bold cursor-pointer hover:text-blue-200"
+                      >
+                        Convert to Lead
+                      </Link>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex justify-between items-center mt-6">
+          <button
+            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+            disabled={currentPage === 1}
+            className="px-4 py-2 border rounded disabled:opacity-50"
+          >
+            Previous
+          </button>
+          <span className="text-sm text-gray-600">
+            Page {currentPage} of {totalPages}
+          </span>
+          <button
+            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+            disabled={currentPage === totalPages}
+            className="px-4 py-2 border rounded disabled:opacity-50"
+          >
+            Next
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}

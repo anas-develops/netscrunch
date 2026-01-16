@@ -1,31 +1,51 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { Prospect } from "./types";
+import { IntendedCustomerProfile, Owner, Prospect } from "./types";
 import { format } from "date-fns";
 
 export async function fetchProspects(
   search?: string | null,
-  icpFilter?: string | null,
   ownerFilter?: string | null,
+  icpFilter?: string | null,
   pageSize: number = 20,
   currentPage: number = 1
 ) {
   const supabaseServer = await createClient();
-  let prospectsDataQuery = supabaseServer
-    .from("prospects")
-    .select(
-      "id, title, description, tag_color, owner:owner_id(full_name), created_at"
-    );
+  let prospectsDataQuery = supabaseServer.from("prospects").select(
+    `
+        id,
+        name,
+        tagged_icp_id,
+        company,
+        job_title,
+        phone,
+        email,
+        website,
+        city,
+        state,
+        zip_code,
+        linked_in_url,
+        company_jobs_board_url,
+        owner_id,
+        owner:profiles!owner_id(id, full_name),
+        tagged_icp:intended_customer_profiles!tagged_icp_id(title, tag_color),
+        created_at
+      `
+  );
 
   if (!!search) {
     prospectsDataQuery = prospectsDataQuery.or(
-      `title.ilike.%${search}%,description.ilike.%${search}%`
+      `name.ilike.%${search}%,company.ilike.%${search}%,job_title.ilike.%${search}%,email.ilike.%${search}%,city.ilike.%${search}%,state.ilike.%${search}%`
     );
   }
 
   if (!!ownerFilter && ownerFilter !== "all") {
     prospectsDataQuery = prospectsDataQuery.eq("owner_id", ownerFilter);
+  }
+
+  if (!!icpFilter && icpFilter !== "all") {
+    prospectsDataQuery = prospectsDataQuery.eq("tagged_icp_id", icpFilter);
   }
 
   const { data: allRecords } = await prospectsDataQuery;
@@ -37,12 +57,17 @@ export async function fetchProspects(
       pageSize * (currentPage - 1) + pageSize - 1
     );
 
-  let { data: prospectsData } = await prospectsDataQueryPaginated;
+  let { data: prospectsData, error } = await prospectsDataQueryPaginated;
+
+  if (error) {
+    console.error("Error fetching deals:", error);
+    throw error;
+  }
 
   if (!!prospectsData) {
-    prospectsData = prospectsData?.map((lead) => ({
-      ...lead,
-      created_at: format(new Date(lead.created_at), "MM/dd/yyyy"),
+    prospectsData = prospectsData?.map((prospect) => ({
+      ...prospect,
+      created_at: format(new Date(prospect.created_at), "MM/dd/yyyy"),
     }));
   }
 
@@ -52,13 +77,18 @@ export async function fetchProspects(
   };
 }
 
-export async function fetchData(): Promise<
-  { id: any; full_name: any }[] | null
-> {
+export async function fetchData(): Promise<{
+  ownerData: Array<Owner & { value: string; label: string }>;
+  icpData: Array<IntendedCustomerProfile & { value: string; label: string }>;
+}> {
   const supabaseServer = await createClient();
   const { data: ownerData } = await supabaseServer
     .from("profiles")
-    .select("id, full_name");
+    .select("id, full_name, value:id, label:full_name");
 
-  return ownerData;
+  const { data: icpData } = await supabaseServer
+    .from("intended_customer_profiles")
+    .select("id, title, value:id, label:title, tag_color");
+
+  return { ownerData: ownerData || [], icpData: icpData || [] };
 }

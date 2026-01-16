@@ -22,5 +22,6 @@ export const config = {
     "/tasks/:path*",
     "/dashboard/:path*",
     "/intended-customer-profiles/:path*",
+    "/prospects/:path*",
   ],
 };

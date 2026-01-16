@@ -8,6 +8,7 @@ export type Lead = {
     full_name: string;
   };
   created_at: string;
+  prospect_id: string | null;
 };
 
 export type Owner = {
@@ -37,5 +38,23 @@ export type Task = {
   owner: {
     full_name: string;
   };
+  created_at: string;
+};
+
+export type Prospect = {
+  id: string;
+  name: string;
+  tagged_icp_id: string;
+  company: string | null;
+  job_title: string | null;
+  phone: string | null;
+  email: string;
+  website: string | null;
+  city: string | null;
+  state: string | null;
+  zip_code: string | null;
+  linked_in_url: string | null;
+  company_jobs_board_url: string | null;
+  owner_id: string;
   created_at: string;
 };

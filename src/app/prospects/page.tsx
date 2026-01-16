@@ -1,23 +1,22 @@
-import IntendedCustomerProfilesClient from "./intendedCustomerProfilesClient";
+import ProspectsClient from "./prospectsClient";
 import { Metadata } from "next";
-import { fetchData, fetchIcps } from "./actions";
+import { fetchData, fetchProspects } from "./actions";
 
 export const metadata: Metadata = {
-  title: "Intended Customer Profiles | NetScrunch by Netpace",
+  title: "Prospects | NetScrunch by Netpace",
 };
 
 export default async function LeadsPage() {
-  const ownerData = await fetchData();
-  const icps = await fetchIcps();
+  const { ownerData, icpData } = await fetchData();
+  const prospects = await fetchProspects();
 
   return (
-    <IntendedCustomerProfilesClient
-      fetchData={fetchData}
-      fetchIcps={fetchIcps}
+    <ProspectsClient
       initialData={{
-        count: icps.count,
-        icps: icps.icps,
-        owners: ownerData,
+        count: prospects.count,
+        prospects: prospects.prospects,
+        owners: ownerData || [],
+        icps: icpData || [],
       }}
     />
   );

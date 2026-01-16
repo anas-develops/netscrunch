@@ -8,3 +8,7 @@ export const getRandomColorHex = () => {
 
   return color;
 };
+
+export const copyToClipboard = (value: string) => {
+  navigator.clipboard.writeText(value);
+};
