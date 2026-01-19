@@ -51,7 +51,12 @@ export function LeadDetailClient({
   const [currentStatus, setCurrentStatus] = useState(lead.status);
   const [showHandoverModal, setShowHandoverModal] = useState(false);
 
-  const statusOptions = ["Applied", "Conversation", "Interview", "Won", "Lost"];
+  const statusOptions = [
+    "Warmed-Up",
+    "Negotiating",
+    "Service Initiated",
+    "Service Declined",
+  ];
   const taskTypes = ["Call", "Email", "Message", "Proposal", "Follow-up"];
 
   const handleStatusChange = async (

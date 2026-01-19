@@ -2,12 +2,23 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Download, Search, Filter, User, Tag, Plus } from "lucide-react";
+import {
+  Download,
+  Search,
+  Filter,
+  User,
+  Tag,
+  Plus,
+  CheckSquare,
+  Square,
+  ArrowUpRight,
+} from "lucide-react";
 import { Prospect, Owner, IntendedCustomerProfile } from "./types";
 import Link from "next/link";
 import Select from "react-select";
 import { components } from "react-select";
 import { fetchProspects } from "./actions";
+import { createClient } from "@/lib/supabase/client";
 
 const PAGE_SIZE = 20;
 
@@ -35,9 +46,16 @@ export default function ProspectsClient({
   const [ownerFilter, setOwnerFilter] = useState<string>("all");
   const [icpFilter, setIcpFilter] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectedProspects, setSelectedProspects] = useState<Set<string>>(
+    new Set()
+  );
+  const [showBulkActions, setShowBulkActions] = useState(false);
+  const [bulkActionStatus, setBulkActionStatus] = useState<string | null>(null);
   const router = useRouter();
 
   const firstLoad = useRef(true);
+
+  const supabaseClient = createClient();
 
   // Custom Option component to display color in the ICP dropdown
   const CustomIcpOption = (props: any) => {
@@ -64,6 +82,155 @@ export default function ProspectsClient({
         </div>
       </components.Option>
     );
+  };
+
+  // Toggle selection of a single prospect
+  const toggleProspectSelection = (id: string) => {
+    const newSelected = new Set(selectedProspects);
+    if (newSelected.has(id)) {
+      newSelected.delete(id);
+    } else {
+      newSelected.add(id);
+    }
+    setSelectedProspects(newSelected);
+
+    // Show bulk actions bar when at least one prospect is selected
+    setShowBulkActions(newSelected.size > 0);
+  };
+
+  // Toggle selection of all visible prospects
+  const toggleSelectAll = () => {
+    if (selectedProspects.size === prospects.prospects.length) {
+      // Deselect all
+      setSelectedProspects(new Set());
+      setShowBulkActions(false);
+    } else {
+      // Select all visible prospects
+      const allIds = new Set(prospects.prospects.map((p) => p.id));
+      setSelectedProspects(allIds);
+      setShowBulkActions(true);
+    }
+  };
+
+  // Handle bulk conversion to leads
+  const handleBulkConvertToLeads = async () => {
+    if (selectedProspects.size === 0) return;
+
+    const prospectIds = Array.from(selectedProspects);
+    const {
+      data: { session },
+    } = await supabaseClient.auth.getSession();
+
+    if (!session) {
+      alert("Not authenticated");
+      return;
+    }
+
+    const { data, error } = await supabaseClient.functions.invoke(
+      "bulk-convert-to-leads",
+      {
+        body: { prospectIds },
+      }
+    );
+
+    console.log("data", data);
+
+    if (error) {
+      alert(error);
+    }
+  };
+
+  // const handleBulkConvertToLeads = async () => {
+  //   if (selectedProspects.size === 0) return;
+
+  //   // Redirect to leads creation page with selected prospect IDs
+  //   const prospectIds: string[] = Array.from(selectedProspects) || [];
+
+  //   console.log("prospectIds", prospectIds);
+
+  //   let promises: Array<
+  //     Promise<{
+  //       status: number;
+  //       data: Prospect;
+  //     }>
+  //   > = [];
+
+  //   const {
+  //     data: { user },
+  //   } = await supabaseClient.auth.getUser();
+
+  //   if (!user) return;
+
+  //   const { data: profile } = await supabaseClient
+  //     .from("profiles")
+  //     .select("department")
+  //     .eq("id", user.id)
+  //     .single();
+  //   const department = profile?.department;
+
+  //   const createLeadFromProspect = async (
+  //     prospectId: string,
+  //     userId: string,
+  //     department: string
+  //   ) => {
+  //     return new Promise<{
+  //       status: number;
+  //       data: Prospect;
+  //     }>(async (resolve, reject) => {
+  //       const { data: prospect } = await supabaseClient
+  //         .from("prospects")
+  //         .select("*")
+  //         .eq("id", prospectId)
+  //         .single();
+
+  //       const { error, status } = await supabaseClient
+  //         .from("prospects")
+  //         .insert({
+  //           name: prospect.name,
+  //           company: prospect.company || "",
+  //           email: prospect.email,
+  //           upwork_id: "",
+  //           linkedin_url: prospect.linked_in_url || "",
+  //           source: "B2B" as const,
+  //           industry: "",
+  //           description: "",
+  //           prospect_id: prospect.id,
+  //           owner_id: userId,
+  //           department,
+  //         });
+
+  //       if (error) {
+  //         reject(error);
+  //         return;
+  //       }
+
+  //       resolve({ status, data: prospect });
+  //     });
+  //   };
+
+  //   prospectIds.forEach((prospectId) => {
+  //     promises.push(createLeadFromProspect(prospectId, user.id, department));
+  //   });
+
+  //   await Promise.allSettled(promises).then((results) => {});
+
+  //   // router.push(`/leads/new?prospect_ids=${prospectIds}`);
+  // };
+
+  // Handle bulk status update
+  const handleBulkUpdateStatus = async () => {
+    if (selectedProspects.size === 0 || !bulkActionStatus) return;
+
+    // In a real implementation, you would call an API to update the statuses
+    // For now, we'll just show an alert
+    alert(
+      `Updating ${selectedProspects.size} prospects to status: ${bulkActionStatus}`
+    );
+
+    // Reset selections after action
+    setSelectedProspects(new Set());
+    setShowBulkActions(false);
+    setBulkActionStatus(null);
   };
 
   useEffect(() => {
@@ -198,16 +365,86 @@ export default function ProspectsClient({
         <strong>{prospects.count}</strong> profiles
       </div>
 
+      {/* Bulk Actions Bar */}
+      {showBulkActions && (
+        <div className="flex items-center justify-between p-3 bg-blue-950 border border-blue-300 rounded-t-lg mb-0">
+          <div className="flex items-center gap-4">
+            <span className="text-sm font-medium text-white">
+              {selectedProspects.size} selected
+            </span>
+            <button
+              onClick={handleBulkConvertToLeads}
+              className="flex items-center gap-1 text-sm bg-green-600 text-white px-3 py-1.5 rounded hover:bg-green-700"
+            >
+              <ArrowUpRight size={14} />
+              Convert to Leads
+            </button>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-white">
+                Update Status:
+              </span>
+              <select
+                value={bulkActionStatus || ""}
+                onChange={(e) => setBulkActionStatus(e.target.value)}
+                className="border rounded px-2 py-1 text-sm"
+              >
+                <option value="">Select Status</option>
+                <option value="contacted">Contacted</option>
+                <option value="interested">Interested</option>
+                <option value="not_interested">Not Interested</option>
+                <option value="closed_won">Closed Won</option>
+                <option value="closed_lost">Closed Lost</option>
+              </select>
+              <button
+                onClick={handleBulkUpdateStatus}
+                disabled={!bulkActionStatus}
+                className={`px-3 py-1.5 rounded text-sm ${
+                  bulkActionStatus
+                    ? "bg-blue-600 text-white hover:bg-blue-700"
+                    : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                }`}
+              >
+                Apply
+              </button>
+            </div>
+          </div>
+          <button
+            onClick={() => {
+              setSelectedProspects(new Set());
+              setShowBulkActions(false);
+            }}
+            className="text-sm text-blue-800 hover:underline"
+          >
+            Clear selection
+          </button>
+        </div>
+      )}
+
       {/* Table */}
       {prospects.prospects?.length === 0 ? (
         <div className="text-center py-12 text-gray-500">
           No prospects found. Try adjusting your filters.
         </div>
       ) : (
-        <div className="overflow-x-auto bg-white rounded-lg border">
+        <div
+          className={`overflow-x-auto bg-white rounded-lg border ${
+            showBulkActions ? "rounded-t-none" : ""
+          }`}
+        >
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-900">
               <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider w-12">
+                  <input
+                    type="checkbox"
+                    checked={
+                      selectedProspects.size === prospects.prospects.length &&
+                      prospects.prospects.length > 0
+                    }
+                    onChange={toggleSelectAll}
+                    className="rounded text-blue-600 focus:ring-blue-500"
+                  />
+                </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
                   Name
                 </th>
@@ -257,7 +494,20 @@ export default function ProspectsClient({
             </thead>
             <tbody className="bg-gray-700 divide-y divide-gray-200">
               {prospects.prospects?.map((prospect) => (
-                <tr key={prospect.id} className="hover:bg-gray-800">
+                <tr
+                  key={prospect.id}
+                  className={`hover:bg-gray-800 ${
+                    selectedProspects.has(prospect.id) ? "bg-gray-600" : ""
+                  }`}
+                >
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <input
+                      type="checkbox"
+                      checked={selectedProspects.has(prospect.id)}
+                      onChange={() => toggleProspectSelection(prospect.id)}
+                      className="rounded text-blue-600 focus:ring-blue-500"
+                    />
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className="font-medium">{prospect.name}</span>
                   </td>

@@ -7,7 +7,12 @@ import { Lead, Owner } from "./types";
 import Link from "next/link";
 
 const PAGE_SIZE = 20;
-const STATUS_OPTIONS = ["Applied", "Conversation", "Interview", "Won", "Lost"];
+const STATUS_OPTIONS = [
+  "Warmed-Up",
+  "Negotiating",
+  "Service Initiated",
+  "Service Declined",
+];
 const SOURCE_OPTIONS = [
   "Upwork",
   "Freelancer",
@@ -96,11 +101,11 @@ export default function LeadsClient({
 
   const StatusBadge = ({ status }: { status: string }) => {
     const colorMap: Record<string, string> = {
-      Applied: "bg-blue-100 text-blue-800",
-      Conversation: "bg-orange-100 text-orange-800",
+      "Warmed-Up": "bg-blue-100 text-blue-800",
+      Negotiating: "bg-orange-100 text-orange-800",
       Interview: "bg-purple-100 text-purple-800",
-      Won: "bg-green-100 text-green-800",
-      Lost: "bg-red-100 text-red-800",
+      "Service Initiated": "bg-green-100 text-green-800",
+      "Service Lost": "bg-red-100 text-red-800",
     };
     return (
       <span
