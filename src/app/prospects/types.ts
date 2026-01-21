@@ -1,6 +1,7 @@
 export type Prospect = {
   id: string;
   name: string;
+  status: string;
   tagged_icp_id: string;
   company: string | null;
   job_title: string | null;

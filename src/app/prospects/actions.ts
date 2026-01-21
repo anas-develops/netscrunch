@@ -30,7 +30,8 @@ export async function fetchProspects(
         owner_id,
         owner:profiles!owner_id(id, full_name),
         tagged_icp:intended_customer_profiles!tagged_icp_id(title, tag_color),
-        created_at
+        created_at,
+        status
       `
   );
 

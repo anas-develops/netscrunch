@@ -22,6 +22,17 @@ import { createClient } from "@/lib/supabase/client";
 
 const PAGE_SIZE = 20;
 
+const ALLOWED_STATUSES = [
+  "Not Contacted",
+  "Not Qualified",
+  "Pre-Qualified",
+  "Lost Lead",
+  "Junk Lead",
+  "Contacted",
+  "Contacted in Future",
+  "Attempted to Contact",
+];
+
 export default function ProspectsClient({
   initialData,
 }: {
@@ -138,6 +149,33 @@ export default function ProspectsClient({
     if (error) {
       alert(error);
     }
+
+    return data;
+  };
+
+  const bulkUpdateProspectStatus = async (
+    prospectIds: string[],
+    status: string
+  ) => {
+    const {
+      data: { session },
+    } = await supabaseClient.auth.getSession();
+    if (!session) return;
+
+    const { data, error } = await supabaseClient.functions.invoke(
+      "bulk-update-prospect-status",
+      {
+        body: { prospectIds, status },
+      }
+    );
+
+    console.log("data", data);
+
+    if (error) {
+      alert(error);
+    }
+
+    return data;
   };
 
   // const handleBulkConvertToLeads = async () => {
@@ -231,6 +269,8 @@ export default function ProspectsClient({
     setSelectedProspects(new Set());
     setShowBulkActions(false);
     setBulkActionStatus(null);
+
+    bulkUpdateProspectStatus(Array.from(selectedProspects), bulkActionStatus);
   };
 
   useEffect(() => {
@@ -266,6 +306,28 @@ export default function ProspectsClient({
       </div>
     );
   }
+
+  const StatusBadge = ({ status }: { status: string }) => {
+    const colorMap: Record<string, string> = {
+      "Not Contacted": "bg-gray-100 text-gray-800",
+      "Not Qualified": "bg-yellow-100 text-yellow-800",
+      "Pre-Qualified": "bg-green-100 text-green-800",
+      "Lost Lead": "bg-red-100 text-red-800",
+      "Junk Lead": "bg-red-100 text-red-800",
+      Contacted: "bg-blue-100 text-blue-800",
+      "Contacted in Future": "bg-purple-100 text-purple-800",
+      "Attempted to Contact": "bg-orange-100 text-orange-800",
+    };
+    return (
+      <span
+        className={`text-xs px-2 py-1 rounded-full font-medium ${
+          colorMap[status] || "bg-gray-100"
+        }`}
+      >
+        {status}
+      </span>
+    );
+  };
 
   return (
     <div className="p-4 md:p-8">
@@ -389,11 +451,11 @@ export default function ProspectsClient({
                 className="border rounded px-2 py-1 text-sm"
               >
                 <option value="">Select Status</option>
-                <option value="contacted">Contacted</option>
-                <option value="interested">Interested</option>
-                <option value="not_interested">Not Interested</option>
-                <option value="closed_won">Closed Won</option>
-                <option value="closed_lost">Closed Lost</option>
+                {ALLOWED_STATUSES.map((status) => (
+                  <option key={status} value={status}>
+                    {status}
+                  </option>
+                ))}
               </select>
               <button
                 onClick={handleBulkUpdateStatus}
@@ -450,6 +512,9 @@ export default function ProspectsClient({
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
                   ICP Tag
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
+                  Status
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
                   Created By
@@ -521,6 +586,9 @@ export default function ProspectsClient({
                         {prospect.tagged_icp.title}
                       </span>
                     </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <StatusBadge status={prospect.status} />
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     {prospect.owner.full_name}
