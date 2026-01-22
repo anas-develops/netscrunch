@@ -198,6 +198,24 @@ export default function ProspectsClient({
     console.log("data", data);
 
     if (error) {
+      // Clear pending updates for the failed prospect IDs
+      const updatedPending = { ...pendingUpdates };
+      prospectIds.forEach(id => {
+        if (updatedPending[id]) {
+          delete updatedPending[id];
+        }
+      });
+
+      setPendingUpdatesState(updatedPending);
+      setPendingUpdates(updatedPending);
+
+      // Clear localStorage if no pending updates remain
+      if (Object.keys(updatedPending).length === 0) {
+        clearPendingUpdates();
+      } else {
+        setPendingUpdates(updatedPending);
+      }
+
       alert(error);
     }
 

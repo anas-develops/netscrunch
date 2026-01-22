@@ -172,6 +172,24 @@ export default function LeadsClient({
     console.log("data", data);
 
     if (error) {
+      // Clear pending updates for the failed lead IDs
+      const updatedPending = { ...pendingUpdates };
+      leadIds.forEach(id => {
+        if (updatedPending[id]) {
+          delete updatedPending[id];
+        }
+      });
+
+      setPendingUpdatesState(updatedPending);
+      setPendingUpdates(updatedPending);
+
+      // Clear localStorage if no pending updates remain
+      if (Object.keys(updatedPending).length === 0) {
+        clearPendingUpdates();
+      } else {
+        setPendingUpdates(updatedPending);
+      }
+
       alert(error);
     }
 
