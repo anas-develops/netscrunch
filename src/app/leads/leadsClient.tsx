@@ -11,6 +11,7 @@ import {
   Plus,
   CheckSquare,
   Square,
+  RotateCcw,
 } from "lucide-react";
 import { Lead, Owner } from "./types";
 import Link from "next/link";
@@ -30,6 +31,23 @@ const SOURCE_OPTIONS = [
   "B2B",
   "Referral",
 ];
+
+// Helper functions for localStorage
+const getPendingUpdates = (): Record<string, string> => {
+  if (typeof window === "undefined") return {};
+  const stored = localStorage.getItem("pendingLeadStatusUpdates");
+  return stored ? JSON.parse(stored) : {};
+};
+
+const setPendingUpdates = (updates: Record<string, string>) => {
+  if (typeof window === "undefined") return;
+  localStorage.setItem("pendingLeadStatusUpdates", JSON.stringify(updates));
+};
+
+const clearPendingUpdates = () => {
+  if (typeof window === "undefined") return;
+  localStorage.removeItem("pendingLeadStatusUpdates");
+};
 
 export default function LeadsClient({
   fetchData,
@@ -70,9 +88,15 @@ export default function LeadsClient({
   const [selectedLeads, setSelectedLeads] = useState<Set<string>>(new Set());
   const [showBulkActions, setShowBulkActions] = useState(false);
   const [bulkActionStatus, setBulkActionStatus] = useState<string | null>(null);
+  const [pendingUpdates, setPendingUpdatesState] = useState<Record<string, string>>({});
   const router = useRouter();
 
   const firstLoad = useRef(true);
+
+  // Initialize pending updates from localStorage
+  useEffect(() => {
+    setPendingUpdatesState(getPendingUpdates());
+  }, []);
 
   // Toggle selection of a single lead
   const toggleLeadSelection = (id: string) => {
@@ -106,6 +130,17 @@ export default function LeadsClient({
   const handleBulkUpdateStatus = async () => {
     if (selectedLeads.size === 0 || !bulkActionStatus) return;
 
+    // Store pending updates in localStorage
+    const leadIds = Array.from(selectedLeads);
+    const updates = { ...pendingUpdates };
+
+    leadIds.forEach(id => {
+      updates[id] = bulkActionStatus!;
+    });
+
+    setPendingUpdates(updates);
+    setPendingUpdatesState(updates);
+
     // In a real implementation, you would call an API to update the statuses
     // For now, we'll just show an alert
     alert(
@@ -117,7 +152,7 @@ export default function LeadsClient({
     setShowBulkActions(false);
     setBulkActionStatus(null);
 
-    bulkUpdateLeadStatus(Array.from(selectedLeads), bulkActionStatus);
+    bulkUpdateLeadStatus(leadIds, bulkActionStatus);
   };
 
   const bulkUpdateLeadStatus = async (leadIds: string[], status: string) => {
@@ -143,6 +178,48 @@ export default function LeadsClient({
     return data;
   };
 
+  // Refresh leads function
+  const refreshLeads = async () => {
+    setLoading(true);
+    try {
+      const { leads, count } = await fetchLeads(
+        search,
+        statusFilter,
+        sourceFilter,
+        ownerFilter,
+        PAGE_SIZE,
+        currentPage
+      );
+
+      setLeads({ leads, count });
+
+      // Check if any pending updates match the new data and clear them
+      const updatedPending = { ...pendingUpdates };
+      let hasChanges = false;
+
+      leads.forEach(lead => {
+        if (updatedPending[lead.id] && updatedPending[lead.id] === lead.status) {
+          delete updatedPending[lead.id];
+          hasChanges = true;
+        }
+      });
+
+      if (hasChanges) {
+        setPendingUpdatesState(updatedPending);
+        setPendingUpdates(updatedPending);
+
+        // Clear localStorage if no pending updates remain
+        if (Object.keys(updatedPending).length === 0) {
+          clearPendingUpdates();
+        } else {
+          setPendingUpdates(updatedPending);
+        }
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (!firstLoad.current) {
       (async function () {
@@ -156,6 +233,29 @@ export default function LeadsClient({
         );
 
         setLeads({ leads, count });
+
+        // Check if any pending updates match the new data and clear them
+        const updatedPending = { ...pendingUpdates };
+        let hasChanges = false;
+
+        leads.forEach(lead => {
+          if (updatedPending[lead.id] && updatedPending[lead.id] === lead.status) {
+            delete updatedPending[lead.id];
+            hasChanges = true;
+          }
+        });
+
+        if (hasChanges) {
+          setPendingUpdatesState(updatedPending);
+          setPendingUpdates(updatedPending);
+
+          // Clear localStorage if no pending updates remain
+          if (Object.keys(updatedPending).length === 0) {
+            clearPendingUpdates();
+          } else {
+            setPendingUpdates(updatedPending);
+          }
+        }
       })();
     }
 
@@ -181,21 +281,31 @@ export default function LeadsClient({
     );
   }
 
-  const StatusBadge = ({ status }: { status: string }) => {
+  // Enhanced StatusBadge that shows pending status
+  const StatusBadge = ({ status, leadId }: { status: string; leadId: string }) => {
+    const pendingStatus = pendingUpdates[leadId];
+    const displayStatus = pendingStatus ? `${status} → ${pendingStatus} (pending)` : status;
+
     const colorMap: Record<string, string> = {
       "Warmed-Up": "bg-blue-100 text-blue-800",
       Negotiating: "bg-orange-100 text-orange-800",
       Interview: "bg-purple-100 text-purple-800",
       "Service Initiated": "bg-green-100 text-green-800",
       "Service Lost": "bg-red-100 text-red-800",
+      "Change Pending": "bg-yellow-100 text-yellow-800",
     };
+
+    // Determine the color based on the original status or pending status
+    let bgColor = colorMap[status] || "bg-gray-100";
+    if (pendingStatus) {
+      bgColor = "bg-yellow-100 text-yellow-800"; // Yellow for pending changes
+    }
+
     return (
       <span
-        className={`text-xs px-2 py-1 rounded-full font-medium ${
-          colorMap[status] || "bg-gray-100"
-        }`}
+        className={`text-xs px-2 py-1 rounded-full font-medium ${bgColor}`}
       >
-        {status}
+        {displayStatus}
       </span>
     );
   };
@@ -278,6 +388,16 @@ export default function LeadsClient({
             </option>
           ))}
         </select>
+
+        {/* Refresh Button */}
+        <button
+          onClick={refreshLeads}
+          disabled={loading}
+          className="flex items-center justify-center gap-1 bg-gray-200 text-gray-800 px-3 py-2 rounded text-sm hover:bg-gray-300 disabled:opacity-50"
+        >
+          <RotateCcw size={14} />
+          Refresh
+        </button>
 
         {/* Clear Filters */}
         {(search ||
@@ -432,7 +552,7 @@ export default function LeadsClient({
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <StatusBadge status={lead.status} />
+                    <StatusBadge status={lead.status} leadId={lead.id} />
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     {lead.owner_id.full_name}
