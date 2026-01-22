@@ -12,6 +12,7 @@ import {
   CheckSquare,
   Square,
   ArrowUpRight,
+  RotateCcw,
 } from "lucide-react";
 import { Prospect, Owner, IntendedCustomerProfile } from "./types";
 import Link from "next/link";
@@ -32,6 +33,23 @@ const ALLOWED_STATUSES = [
   "Contacted in Future",
   "Attempted to Contact",
 ];
+
+// Helper functions for localStorage
+const getPendingUpdates = (): Record<string, string> => {
+  if (typeof window === "undefined") return {};
+  const stored = localStorage.getItem("pendingProspectStatusUpdates");
+  return stored ? JSON.parse(stored) : {};
+};
+
+const setPendingUpdates = (updates: Record<string, string>) => {
+  if (typeof window === "undefined") return;
+  localStorage.setItem("pendingProspectStatusUpdates", JSON.stringify(updates));
+};
+
+const clearPendingUpdates = () => {
+  if (typeof window === "undefined") return;
+  localStorage.removeItem("pendingProspectStatusUpdates");
+};
 
 export default function ProspectsClient({
   initialData,
@@ -62,11 +80,19 @@ export default function ProspectsClient({
   );
   const [showBulkActions, setShowBulkActions] = useState(false);
   const [bulkActionStatus, setBulkActionStatus] = useState<string | null>(null);
+  const [pendingUpdates, setPendingUpdatesState] = useState<
+    Record<string, string>
+  >({});
   const router = useRouter();
 
   const firstLoad = useRef(true);
 
   const supabaseClient = createClient();
+
+  // Initialize pending updates from localStorage
+  useEffect(() => {
+    setPendingUpdatesState(getPendingUpdates());
+  }, []);
 
   // Custom Option component to display color in the ICP dropdown
   const CustomIcpOption = (props: any) => {
@@ -178,86 +204,20 @@ export default function ProspectsClient({
     return data;
   };
 
-  // const handleBulkConvertToLeads = async () => {
-  //   if (selectedProspects.size === 0) return;
-
-  //   // Redirect to leads creation page with selected prospect IDs
-  //   const prospectIds: string[] = Array.from(selectedProspects) || [];
-
-  //   console.log("prospectIds", prospectIds);
-
-  //   let promises: Array<
-  //     Promise<{
-  //       status: number;
-  //       data: Prospect;
-  //     }>
-  //   > = [];
-
-  //   const {
-  //     data: { user },
-  //   } = await supabaseClient.auth.getUser();
-
-  //   if (!user) return;
-
-  //   const { data: profile } = await supabaseClient
-  //     .from("profiles")
-  //     .select("department")
-  //     .eq("id", user.id)
-  //     .single();
-  //   const department = profile?.department;
-
-  //   const createLeadFromProspect = async (
-  //     prospectId: string,
-  //     userId: string,
-  //     department: string
-  //   ) => {
-  //     return new Promise<{
-  //       status: number;
-  //       data: Prospect;
-  //     }>(async (resolve, reject) => {
-  //       const { data: prospect } = await supabaseClient
-  //         .from("prospects")
-  //         .select("*")
-  //         .eq("id", prospectId)
-  //         .single();
-
-  //       const { error, status } = await supabaseClient
-  //         .from("prospects")
-  //         .insert({
-  //           name: prospect.name,
-  //           company: prospect.company || "",
-  //           email: prospect.email,
-  //           upwork_id: "",
-  //           linkedin_url: prospect.linked_in_url || "",
-  //           source: "B2B" as const,
-  //           industry: "",
-  //           description: "",
-  //           prospect_id: prospect.id,
-  //           owner_id: userId,
-  //           department,
-  //         });
-
-  //       if (error) {
-  //         reject(error);
-  //         return;
-  //       }
-
-  //       resolve({ status, data: prospect });
-  //     });
-  //   };
-
-  //   prospectIds.forEach((prospectId) => {
-  //     promises.push(createLeadFromProspect(prospectId, user.id, department));
-  //   });
-
-  //   await Promise.allSettled(promises).then((results) => {});
-
-  //   // router.push(`/leads/new?prospect_ids=${prospectIds}`);
-  // };
-
   // Handle bulk status update
   const handleBulkUpdateStatus = async () => {
     if (selectedProspects.size === 0 || !bulkActionStatus) return;
+
+    // Store pending updates in localStorage
+    const prospectIds = Array.from(selectedProspects);
+    const updates = { ...pendingUpdates };
+
+    prospectIds.forEach((id) => {
+      updates[id] = bulkActionStatus!;
+    });
+
+    setPendingUpdates(updates);
+    setPendingUpdatesState(updates);
 
     // In a real implementation, you would call an API to update the statuses
     // For now, we'll just show an alert
@@ -270,7 +230,51 @@ export default function ProspectsClient({
     setShowBulkActions(false);
     setBulkActionStatus(null);
 
-    bulkUpdateProspectStatus(Array.from(selectedProspects), bulkActionStatus);
+    bulkUpdateProspectStatus(prospectIds, bulkActionStatus);
+  };
+
+  // Refresh prospects function
+  const refreshProspects = async () => {
+    setLoading(true);
+    try {
+      const { prospects, count } = await fetchProspects(
+        search,
+        ownerFilter,
+        icpFilter,
+        PAGE_SIZE,
+        currentPage
+      );
+
+      setProspects({ prospects, count });
+
+      // Check if any pending updates match the new data and clear them
+      const updatedPending = { ...pendingUpdates };
+      let hasChanges = false;
+
+      prospects.forEach((prospect) => {
+        if (
+          updatedPending[prospect.id] &&
+          updatedPending[prospect.id] === prospect.status
+        ) {
+          delete updatedPending[prospect.id];
+          hasChanges = true;
+        }
+      });
+
+      if (hasChanges) {
+        setPendingUpdatesState(updatedPending);
+        setPendingUpdates(updatedPending);
+
+        // Clear localStorage if no pending updates remain
+        if (Object.keys(updatedPending).length === 0) {
+          clearPendingUpdates();
+        } else {
+          setPendingUpdates(updatedPending);
+        }
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -287,6 +291,32 @@ export default function ProspectsClient({
         );
 
         setProspects({ prospects, count });
+
+        // Check if any pending updates match the new data and clear them
+        const updatedPending = { ...pendingUpdates };
+        let hasChanges = false;
+
+        prospects.forEach((prospect) => {
+          if (
+            updatedPending[prospect.id] &&
+            updatedPending[prospect.id] === prospect.status
+          ) {
+            delete updatedPending[prospect.id];
+            hasChanges = true;
+          }
+        });
+
+        if (hasChanges) {
+          setPendingUpdatesState(updatedPending);
+          setPendingUpdates(updatedPending);
+
+          // Clear localStorage if no pending updates remain
+          if (Object.keys(updatedPending).length === 0) {
+            clearPendingUpdates();
+          } else {
+            setPendingUpdates(updatedPending);
+          }
+        }
       })();
     }
 
@@ -307,7 +337,19 @@ export default function ProspectsClient({
     );
   }
 
-  const StatusBadge = ({ status }: { status: string }) => {
+  // Enhanced StatusBadge that shows pending status
+  const StatusBadge = ({
+    status,
+    prospectId,
+  }: {
+    status: string;
+    prospectId: string;
+  }) => {
+    const pendingStatus = pendingUpdates[prospectId];
+    const displayStatus = pendingStatus
+      ? `${status} → ${pendingStatus} (pending)`
+      : status;
+
     const colorMap: Record<string, string> = {
       "Not Contacted": "bg-gray-100 text-gray-800",
       "Not Qualified": "bg-yellow-100 text-yellow-800",
@@ -318,13 +360,16 @@ export default function ProspectsClient({
       "Contacted in Future": "bg-purple-100 text-purple-800",
       "Attempted to Contact": "bg-orange-100 text-orange-800",
     };
+
+    // Determine the color based on the original status or pending status
+    let bgColor = colorMap[status] || "bg-gray-100";
+    if (pendingStatus) {
+      bgColor = "bg-yellow-100 text-yellow-800"; // Yellow for pending changes
+    }
+
     return (
-      <span
-        className={`text-xs px-2 py-1 rounded-full font-medium ${
-          colorMap[status] || "bg-gray-100"
-        }`}
-      >
-        {status}
+      <span className={`text-xs px-2 py-1 rounded-full font-medium ${bgColor}`}>
+        {displayStatus}
       </span>
     );
   };
@@ -405,6 +450,16 @@ export default function ProspectsClient({
             Option: CustomIcpOption,
           }}
         />
+
+        {/* Refresh Button */}
+        <button
+          onClick={refreshProspects}
+          disabled={loading}
+          className="flex items-center justify-center gap-1 bg-gray-200 text-gray-800 px-3 py-2 rounded text-sm hover:bg-gray-300 disabled:opacity-50"
+        >
+          <RotateCcw size={14} />
+          Refresh
+        </button>
 
         {/* Clear Filters */}
         {(search || ownerFilter !== "all" || icpFilter !== "all") && (
@@ -588,7 +643,10 @@ export default function ProspectsClient({
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <StatusBadge status={prospect.status} />
+                    <StatusBadge
+                      status={prospect.status}
+                      prospectId={prospect.id}
+                    />
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     {prospect.owner.full_name}
