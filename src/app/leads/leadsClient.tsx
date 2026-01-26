@@ -88,7 +88,9 @@ export default function LeadsClient({
   const [selectedLeads, setSelectedLeads] = useState<Set<string>>(new Set());
   const [showBulkActions, setShowBulkActions] = useState(false);
   const [bulkActionStatus, setBulkActionStatus] = useState<string | null>(null);
-  const [pendingUpdates, setPendingUpdatesState] = useState<Record<string, string>>({});
+  const [pendingUpdates, setPendingUpdatesState] = useState<
+    Record<string, string>
+  >({});
   const router = useRouter();
 
   const firstLoad = useRef(true);
@@ -134,7 +136,7 @@ export default function LeadsClient({
     const leadIds = Array.from(selectedLeads);
     const updates = { ...pendingUpdates };
 
-    leadIds.forEach(id => {
+    leadIds.forEach((id) => {
       updates[id] = bulkActionStatus!;
     });
 
@@ -174,7 +176,7 @@ export default function LeadsClient({
     if (error) {
       // Clear pending updates for the failed lead IDs
       const updatedPending = { ...pendingUpdates };
-      leadIds.forEach(id => {
+      leadIds.forEach((id) => {
         if (updatedPending[id]) {
           delete updatedPending[id];
         }
@@ -215,8 +217,11 @@ export default function LeadsClient({
       const updatedPending = { ...pendingUpdates };
       let hasChanges = false;
 
-      leads.forEach(lead => {
-        if (updatedPending[lead.id] && updatedPending[lead.id] === lead.status) {
+      leads.forEach((lead) => {
+        if (
+          updatedPending[lead.id] &&
+          updatedPending[lead.id] === lead.status
+        ) {
           delete updatedPending[lead.id];
           hasChanges = true;
         }
@@ -256,8 +261,11 @@ export default function LeadsClient({
         const updatedPending = { ...pendingUpdates };
         let hasChanges = false;
 
-        leads.forEach(lead => {
-          if (updatedPending[lead.id] && updatedPending[lead.id] === lead.status) {
+        leads.forEach((lead) => {
+          if (
+            updatedPending[lead.id] &&
+            updatedPending[lead.id] === lead.status
+          ) {
             delete updatedPending[lead.id];
             hasChanges = true;
           }
@@ -300,9 +308,17 @@ export default function LeadsClient({
   }
 
   // Enhanced StatusBadge that shows pending status
-  const StatusBadge = ({ status, leadId }: { status: string; leadId: string }) => {
+  const StatusBadge = ({
+    status,
+    leadId,
+  }: {
+    status: string;
+    leadId: string;
+  }) => {
     const pendingStatus = pendingUpdates[leadId];
-    const displayStatus = pendingStatus ? `${status} → ${pendingStatus} (pending)` : status;
+    const displayStatus = pendingStatus
+      ? `${status} → ${pendingStatus} (pending)`
+      : status;
 
     const colorMap: Record<string, string> = {
       "Warmed-Up": "bg-blue-100 text-blue-800",
@@ -320,9 +336,7 @@ export default function LeadsClient({
     }
 
     return (
-      <span
-        className={`text-xs px-2 py-1 rounded-full font-medium ${bgColor}`}
-      >
+      <span className={`text-xs px-2 py-1 rounded-full font-medium ${bgColor}`}>
         {displayStatus}
       </span>
     );
@@ -496,110 +510,112 @@ export default function LeadsClient({
           No leads found. Try adjusting your filters.
         </div>
       ) : (
-        <div
-          className={`overflow-x-auto bg-white rounded-lg border ${
-            showBulkActions ? "rounded-t-none" : ""
-          }`}
-        >
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-900">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider w-12">
-                  <input
-                    type="checkbox"
-                    checked={
-                      selectedLeads.size === leads.leads.length &&
-                      leads.leads.length > 0
-                    }
-                    onChange={toggleSelectAll}
-                    className="rounded text-blue-600 focus:ring-blue-500"
-                  />
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
-                  Lead
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
-                  Company
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
-                  Source
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
-                  Owner
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
-                  Created
-                </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-200 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-gray-700 divide-y divide-gray-200">
-              {leads.leads?.map((lead) => (
-                <tr
-                  key={lead.id}
-                  className={`hover:bg-gray-800 ${
-                    selectedLeads.has(lead.id) ? "bg-gray-600" : ""
-                  }`}
-                >
-                  <td className="px-6 py-4 whitespace-nowrap">
+        <div className="overflow-x-auto max-w-[75vw]">
+          <div
+            className={`overflow-x-auto bg-white rounded-lg border ${
+              showBulkActions ? "rounded-t-none" : ""
+            }`}
+          >
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-900">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider w-12">
                     <input
                       type="checkbox"
-                      checked={selectedLeads.has(lead.id)}
-                      onChange={() => toggleLeadSelection(lead.id)}
+                      checked={
+                        selectedLeads.size === leads.leads.length &&
+                        leads.leads.length > 0
+                      }
+                      onChange={toggleSelectAll}
                       className="rounded text-blue-600 focus:ring-blue-500"
                     />
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <User className="h-5 w-5 text-gray-400 mr-2" />
-                      <span className="font-medium">{lead.name}</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {lead.company || "—"}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="inline-flex items-center">
-                      <Tag className="h-4 w-4 mr-1 text-gray-500" />
-                      {lead.source}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <StatusBadge status={lead.status} leadId={lead.id} />
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {lead.owner_id.full_name}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    {lead.created_at}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <div className="flex justify-between">
-                      <Link
-                        href={`/leads/${lead.id}`}
-                        className="text-blue-500 font-bold cursor-pointer hover:text-blue-200"
-                      >
-                        View
-                      </Link>
-                      {!!lead.prospect_id && (
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
+                    Lead
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
+                    Company
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
+                    Source
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
+                    Owner
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
+                    Created
+                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-200 uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-gray-700 divide-y divide-gray-200">
+                {leads.leads?.map((lead) => (
+                  <tr
+                    key={lead.id}
+                    className={`hover:bg-gray-800 ${
+                      selectedLeads.has(lead.id) ? "bg-gray-600" : ""
+                    }`}
+                  >
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <input
+                        type="checkbox"
+                        checked={selectedLeads.has(lead.id)}
+                        onChange={() => toggleLeadSelection(lead.id)}
+                        className="rounded text-blue-600 focus:ring-blue-500"
+                      />
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <User className="h-5 w-5 text-gray-400 mr-2" />
+                        <span className="font-medium">{lead.name}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {lead.company || "—"}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="inline-flex items-center">
+                        <Tag className="h-4 w-4 mr-1 text-gray-500" />
+                        {lead.source}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <StatusBadge status={lead.status} leadId={lead.id} />
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {lead.owner_id.full_name}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      {lead.created_at}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <div className="flex justify-between">
                         <Link
-                          href={`/prospects/${lead.prospect_id}`}
+                          href={`/leads/${lead.id}`}
                           className="text-blue-500 font-bold cursor-pointer hover:text-blue-200"
                         >
-                          View Prospect
+                          View
                         </Link>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                        {!!lead.prospect_id && (
+                          <Link
+                            href={`/prospects/${lead.prospect_id}`}
+                            className="text-blue-500 font-bold cursor-pointer hover:text-blue-200"
+                          >
+                            View Prospect
+                          </Link>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 

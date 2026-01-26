@@ -200,7 +200,7 @@ export default function ProspectsClient({
     if (error) {
       // Clear pending updates for the failed prospect IDs
       const updatedPending = { ...pendingUpdates };
-      prospectIds.forEach(id => {
+      prospectIds.forEach((id) => {
         if (updatedPending[id]) {
           delete updatedPending[id];
         }
@@ -561,177 +561,181 @@ export default function ProspectsClient({
           No prospects found. Try adjusting your filters.
         </div>
       ) : (
-        <div
-          className={`overflow-x-auto bg-white rounded-lg border ${
-            showBulkActions ? "rounded-t-none" : ""
-          }`}
-        >
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-900">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider w-12">
-                  <input
-                    type="checkbox"
-                    checked={
-                      selectedProspects.size === prospects.prospects.length &&
-                      prospects.prospects.length > 0
-                    }
-                    onChange={toggleSelectAll}
-                    className="rounded text-blue-600 focus:ring-blue-500"
-                  />
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
-                  Name
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
-                  ICP Tag
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
-                  Created By
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
-                  Company
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
-                  Title
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
-                  Phone
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
-                  Email
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
-                  Website
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
-                  City
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
-                  State
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
-                  Zip Code
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
-                  LinkedIn
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
-                  Job Board
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
-                  Created
-                </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-200 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-gray-700 divide-y divide-gray-200">
-              {prospects.prospects?.map((prospect) => (
-                <tr
-                  key={prospect.id}
-                  className={`hover:bg-gray-800 ${
-                    selectedProspects.has(prospect.id) ? "bg-gray-600" : ""
-                  }`}
-                >
-                  <td className="px-6 py-4 whitespace-nowrap">
+        <div className="overflow-x-auto max-w-[75vw]">
+          <div
+            className={`overflow-x-auto bg-white rounded-lg border ${
+              showBulkActions ? "rounded-t-none" : ""
+            }`}
+          >
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-900">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider w-12">
                     <input
                       type="checkbox"
-                      checked={selectedProspects.has(prospect.id)}
-                      onChange={() => toggleProspectSelection(prospect.id)}
+                      checked={
+                        selectedProspects.size === prospects.prospects.length &&
+                        prospects.prospects.length > 0
+                      }
+                      onChange={toggleSelectAll}
                       className="rounded text-blue-600 focus:ring-blue-500"
                     />
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="font-medium">{prospect.name}</span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div
-                      className="flex items-center rounded-md justify-center"
-                      style={{ backgroundColor: prospect.tagged_icp.tag_color }}
-                    >
-                      <Tag className="h-4 w-4 mr-1 text-gray-500" />
-                      <span className="font-medium">
-                        {prospect.tagged_icp.title}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <StatusBadge
-                      status={prospect.status}
-                      prospectId={prospect.id}
-                    />
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {prospect.owner.full_name}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {prospect.company || "-"}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {prospect.job_title || "-"}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {prospect.phone || "-"}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {prospect.email || "-"}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {prospect.website || "-"}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {prospect.city || "-"}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {prospect.state || "-"}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {prospect.zip_code || "-"}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {prospect.linked_in_url || "-"}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {prospect.company_jobs_board_url ? (
-                      <Link
-                        href={prospect.company_jobs_board_url}
-                        className="text-blue-500 font-bold cursor-pointer hover:text-blue-200"
-                        target="_blank"
-                      >
-                        Visit
-                      </Link>
-                    ) : (
-                      "-"
-                    )}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    {prospect.created_at}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <div className="flex justify-between items-center gap-2">
-                      <Link
-                        href={`/prospects/${prospect.id}/edit`}
-                        className="text-blue-500 font-bold cursor-pointer hover:text-blue-200"
-                      >
-                        Edit
-                      </Link>
-                      <Link
-                        href={`/leads/new?prospect_id=${prospect.id}`}
-                        className="text-blue-500 font-bold cursor-pointer hover:text-blue-200"
-                      >
-                        Convert to Lead
-                      </Link>
-                    </div>
-                  </td>
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
+                    Name
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
+                    ICP Tag
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
+                    Created By
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
+                    Company
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
+                    Title
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
+                    Phone
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
+                    Email
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
+                    Website
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
+                    City
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
+                    State
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
+                    Zip Code
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
+                    LinkedIn
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
+                    Job Board
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
+                    Created
+                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-200 uppercase tracking-wider">
+                    Actions
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="bg-gray-700 divide-y divide-gray-200">
+                {prospects.prospects?.map((prospect) => (
+                  <tr
+                    key={prospect.id}
+                    className={`hover:bg-gray-800 ${
+                      selectedProspects.has(prospect.id) ? "bg-gray-600" : ""
+                    }`}
+                  >
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <input
+                        type="checkbox"
+                        checked={selectedProspects.has(prospect.id)}
+                        onChange={() => toggleProspectSelection(prospect.id)}
+                        className="rounded text-blue-600 focus:ring-blue-500"
+                      />
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="font-medium">{prospect.name}</span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div
+                        className="flex items-center rounded-md justify-center"
+                        style={{
+                          backgroundColor: prospect.tagged_icp.tag_color,
+                        }}
+                      >
+                        <Tag className="h-4 w-4 mr-1 text-gray-500" />
+                        <span className="font-medium">
+                          {prospect.tagged_icp.title}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <StatusBadge
+                        status={prospect.status}
+                        prospectId={prospect.id}
+                      />
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {prospect.owner.full_name}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {prospect.company || "-"}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {prospect.job_title || "-"}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {prospect.phone || "-"}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {prospect.email || "-"}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {prospect.website || "-"}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {prospect.city || "-"}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {prospect.state || "-"}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {prospect.zip_code || "-"}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {prospect.linked_in_url || "-"}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {prospect.company_jobs_board_url ? (
+                        <Link
+                          href={prospect.company_jobs_board_url}
+                          className="text-blue-500 font-bold cursor-pointer hover:text-blue-200"
+                          target="_blank"
+                        >
+                          Visit
+                        </Link>
+                      ) : (
+                        "-"
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      {prospect.created_at}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <div className="flex justify-between items-center gap-2">
+                        <Link
+                          href={`/prospects/${prospect.id}/edit`}
+                          className="text-blue-500 font-bold cursor-pointer hover:text-blue-200"
+                        >
+                          Edit
+                        </Link>
+                        <Link
+                          href={`/leads/new?prospect_id=${prospect.id}`}
+                          className="text-blue-500 font-bold cursor-pointer hover:text-blue-200"
+                        >
+                          Convert to Lead
+                        </Link>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
