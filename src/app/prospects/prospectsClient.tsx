@@ -176,6 +176,8 @@ export default function ProspectsClient({
       alert(error);
     }
 
+    alert("Lead conversion queued, check back in a while on the leads page");
+
     return data;
   };
 

@@ -603,7 +603,7 @@ export default function LeadsClient({
                         </Link>
                         {!!lead.prospect_id && (
                           <Link
-                            href={`/prospects/${lead.prospect_id}`}
+                            href={`/prospects/${lead.prospect_id}/edit`}
                             className="text-blue-500 font-bold cursor-pointer hover:text-blue-200"
                           >
                             View Prospect

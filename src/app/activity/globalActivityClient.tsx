@@ -13,6 +13,10 @@ type Activity = {
   entity_id: string;
   resolved_source: string;
   user: { full_name: string };
+  linkedEntity: {
+    type: string;
+    [key: string]: any;
+  };
 };
 
 type TeamMember = { id: string; full_name: string };
@@ -60,11 +64,11 @@ export function GlobalActivityClient({
   }, [localFilters, currentPage]);
 
   const handleFilterChange = (key: string, value: string) => {
-    setLocalFilters((prev) => ({ ...prev, [key]: value }));
+    setLocalFilters((prev: any) => ({ ...prev, [key]: value }));
   };
 
   const handleDateChange = (type: "start" | "end", value: string) => {
-    setLocalFilters((prev) => ({
+    setLocalFilters((prev: any) => ({
       ...prev,
       [type === "start" ? "startDate" : "endDate"]: value || null,
     }));

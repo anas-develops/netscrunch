@@ -85,7 +85,9 @@ export async function fetchGlobalActivities(
     dealIds.length > 0
       ? supabase
           .from("deals")
-          .select("id, name, value, stage, leads!lead_id(name, company)")
+          .select(
+            "id, name, value, stage, leads!lead_id(name, company, source)"
+          )
           .in("id", dealIds)
       : Promise.resolve({ data: [] }),
 
@@ -97,8 +99,8 @@ export async function fetchGlobalActivities(
             `
             id,
             description,
-            leads!lead_id(name, company),
-            deals!deal_id(name)
+            leads!lead_id(name, company, source),
+            deals!deal_id(name, leads!lead_id(name, company, source))
           `
           )
           .in("id", taskIds)

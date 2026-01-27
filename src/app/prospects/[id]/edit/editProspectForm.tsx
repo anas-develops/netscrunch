@@ -24,6 +24,9 @@ export default function EditProspectForm({ prospect }: { prospect: Prospect }) {
     company_jobs_board_url: prospect.company_jobs_board_url || "",
     owner_id: prospect.owner_id || "",
   });
+  const [icps, setIcps] = useState<
+    { value: any; label: any; tag_color: any }[]
+  >([]);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
@@ -57,10 +60,7 @@ export default function EditProspectForm({ prospect }: { prospect: Prospect }) {
 
     const { error } = await supabaseClient
       .from("prospects")
-      .update({
-        ...formData,
-        updated_at: new Date().toISOString(),
-      })
+      .update(formData)
       .eq("id", prospect.id)
       .eq("owner_id", user.id);
 
@@ -84,7 +84,10 @@ export default function EditProspectForm({ prospect }: { prospect: Prospect }) {
           );
         }
 
-        icpDataQuery.then((res) => resolve(res.data || []));
+        icpDataQuery.then((res) => {
+          setIcps(res.data || []);
+          resolve(res.data || []);
+        });
       }
     );
   };
@@ -109,7 +112,7 @@ export default function EditProspectForm({ prospect }: { prospect: Prospect }) {
           className="border p-2 w-full"
           required
           placeholder="Select ICP to tag with *"
-          value={formData.tagged_icp_id}
+          value={icps.find((icp) => icp.value === formData.tagged_icp_id)}
         />
 
         {/* Name */}
