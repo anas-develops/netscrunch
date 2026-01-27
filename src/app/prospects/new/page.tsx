@@ -227,7 +227,7 @@ export default function NewProspect() {
           disabled={loading}
           className="bg-blue-600 text-white p-2 w-full"
         >
-          {loading ? "Creating..." : "Create ICP"}
+          {loading ? "Creating..." : "Create Prospect"}
         </button>
       </form>
     </div>
