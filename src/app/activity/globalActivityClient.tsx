@@ -3,23 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { format } from "date-fns";
-
-type Activity = {
-  id: string;
-  timestamp: string;
-  action_type: string;
-  description: string | null;
-  entity_type: string;
-  entity_id: string;
-  resolved_source: string;
-  user: { full_name: string };
-  linkedEntity: {
-    type: string;
-    [key: string]: any;
-  };
-};
-
-type TeamMember = { id: string; full_name: string };
+import { Activity, TeamMember } from "./type";
 
 const ENTITY_TYPES = [
   { value: "", label: "All Entities" },

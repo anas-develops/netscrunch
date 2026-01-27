@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { GlobalActivityClient } from "./globalActivityClient";
 import { fetchGlobalActivities, fetchTeamMembers } from "./actions";
 import { createClient } from "@/lib/supabase/server";
+import { Activity, TeamMember } from "./type";
 
 const ENTITY_TYPES = ["all", "lead", "deal", "task"];
 const SOURCES = [
@@ -51,7 +52,8 @@ export default async function GlobalActivityPage({
     userId: routeSearchParams.user || null,
     startDate: routeSearchParams.startDate || null,
     endDate: routeSearchParams.endDate || null,
-    entityType: routeSearchParams.entityType || null,
+    entityType:
+      (routeSearchParams.entityType as "lead" | "deal" | "task" | null) || null,
   };
 
   const { activities, count } = await fetchGlobalActivities(
@@ -62,7 +64,11 @@ export default async function GlobalActivityPage({
 
   return (
     <GlobalActivityClient
-      initialData={{ activities, count, teamMembers }}
+      initialData={{
+        activities: activities as unknown as Activity[],
+        count,
+        teamMembers: teamMembers as unknown as TeamMember[],
+      }}
       filters={filters}
       currentPage={currentPage}
       role={profile.role}

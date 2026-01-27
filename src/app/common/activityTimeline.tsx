@@ -74,7 +74,7 @@ export function ActivityTimeline({
         .or(orFilter)
         .order("timestamp", { ascending: false });
 
-      setActivities(data || []);
+      setActivities((data as unknown as Activity[]) || []);
     } catch (error) {
       console.error("Error fetching activities:", error);
       setActivities([]);
