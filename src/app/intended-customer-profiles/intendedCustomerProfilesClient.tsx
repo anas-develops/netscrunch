@@ -250,7 +250,11 @@ export default function IntendedCustomerProfilesClient({
                     />
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    {icp.description.slice(0, 20) + "..."}
+                    {!!icp.description &&
+                    typeof icp.description === "string" &&
+                    icp.description?.length
+                      ? icp.description.slice(0, 20) + "..."
+                      : "-"}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     {icp.owner.full_name}
