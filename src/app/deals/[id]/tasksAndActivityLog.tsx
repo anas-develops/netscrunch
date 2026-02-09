@@ -57,6 +57,7 @@ export function TasksAndActivityLog({
       fetchTasks();
     }
     setCreatingTask(false);
+    window.location.reload();
   };
 
   return (

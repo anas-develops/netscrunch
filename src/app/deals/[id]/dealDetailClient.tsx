@@ -54,6 +54,7 @@ export default function DealDetailClient({
       // Optional: optimistic update or refetch
     }
     setCreatingTask(false);
+    window.location.reload();
   };
 
   return (

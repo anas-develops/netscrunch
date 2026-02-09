@@ -90,6 +90,7 @@ export function LeadDetailClient({
       // Optional: optimistic update or refetch
     }
     setCreatingTask(false);
+    window.location.reload();
   };
 
   const handleReassign = async () => {
