@@ -1,6 +1,7 @@
 import { redirect, notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { EditDealForm } from "../editDealForm";
+import { Deal } from "@/app/deals/types";
 
 export default async function EditDealPage({
   params,
@@ -18,7 +19,7 @@ export default async function EditDealPage({
   if (!user) redirect("/login");
 
   // Fetch deal with linked lead + owner
-  const { data: deal } = await supabase
+  const { data: deal }: { data: Deal | null } = await supabase
     .from("deals")
     .select(
       `
