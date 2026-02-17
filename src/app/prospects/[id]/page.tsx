@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { IntendedCustomerProfile, Prospect } from "../types";
+import { IntendedCustomerProfile, Prospect, Task } from "../types";
 import ProspectDetailClient from "./prospectDetailClient";
 
 export default async function ViewProspectPage({
@@ -53,6 +53,15 @@ export default async function ViewProspectPage({
     .from("intended_customer_profiles")
     .select("id, title, tag_color");
 
+  // Fetch tasks
+  const { data: tasks } = await supabase
+    .from("tasks")
+    .select(
+      "id, type, description, due_date, status, created_at, lead:lead_id(id, name, company, source), deal:deal_id(id, owner_name, lead_name, lead_company),owner:owner_id(full_name)"
+    )
+    .eq("prospect_id", routeParams.id)
+    .order("due_date", { ascending: true });
+
   // Get current user
   const {
     data: { user },
@@ -67,6 +76,7 @@ export default async function ViewProspectPage({
           IntendedCustomerProfile & { value: string; label: string }
         >) || []
       }
+      tasks={(tasks as unknown as Task[]) || []}
       userId={user!.id}
     />
   );

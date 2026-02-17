@@ -1,0 +1,1 @@
+ALTER TABLE public.tasks ADD COLUMN prospect_id UUID REFERENCES public.prospects(id);

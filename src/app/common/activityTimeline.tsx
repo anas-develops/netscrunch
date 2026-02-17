@@ -16,7 +16,7 @@ export function ActivityTimeline({
   entityType,
   entityId,
 }: {
-  entityType: "lead" | "deal";
+  entityType: "lead" | "deal" | "prospect";
   entityId: string;
 }) {
   const [activities, setActivities] = useState<Activity[]>([]);
@@ -45,6 +45,12 @@ export function ActivityTimeline({
           .from("tasks")
           .select("id")
           .eq("deal_id", entityId);
+        taskIds = tasks?.map((t) => t.id) || [];
+      } else if (entityType === "prospect") {
+        const { data: tasks } = await supabase
+          .from("tasks")
+          .select("id")
+          .eq("prospect_id", entityId);
         taskIds = tasks?.map((t) => t.id) || [];
       }
 

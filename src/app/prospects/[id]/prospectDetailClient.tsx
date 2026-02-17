@@ -3,13 +3,16 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { format, isBefore } from "date-fns";
 import { createClient } from "@/lib/supabase/client";
-import { Prospect, Owner, IntendedCustomerProfile } from "../types";
+import { Prospect, Owner, IntendedCustomerProfile, Task } from "../types";
+import { ActivityTimeline } from "@/app/common/activityTimeline";
 
 export default function ProspectDetailClient({
   prospect,
   owner,
   icps,
+  tasks,
   userId,
 }: {
   prospect: Prospect;
@@ -17,10 +20,17 @@ export default function ProspectDetailClient({
   icps: Array<
     IntendedCustomerProfile & { value: string; label: string }
   > | null;
+  tasks: Task[];
   userId: string;
 }) {
   const supabaseClient = createClient();
   const router = useRouter();
+  const [newTask, setNewTask] = useState({
+    type: "Email" as const,
+    description: "",
+    due_date: "",
+  });
+  const [creatingTask, setCreatingTask] = useState(false);
   const [currentStatus, setCurrentStatus] = useState(prospect.status);
 
   const statusOptions = [
@@ -33,6 +43,7 @@ export default function ProspectDetailClient({
     "Contacted in Future",
     "Attempted to Contact",
   ];
+  const taskTypes = ["Call", "Email", "Message", "Proposal", "Follow-up"];
 
   const handleStatusChange = async (
     e: React.ChangeEvent<HTMLSelectElement>,
@@ -45,6 +56,26 @@ export default function ProspectDetailClient({
     if (!error) {
       setCurrentStatus(newStatus);
     }
+  };
+
+  const handleTaskSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setCreatingTask(true);
+
+    const { error } = await supabaseClient.from("tasks").insert({
+      type: newTask.type,
+      description: newTask.description || null,
+      due_date: newTask.due_date,
+      status: "pending",
+      prospect_id: prospect.id,
+      owner_id: userId,
+    });
+
+    if (!error) {
+      setNewTask({ type: "Email", description: "", due_date: "" });
+    }
+    setCreatingTask(false);
+    window.location.reload();
   };
 
   const handleReassign = async () => {
@@ -214,6 +245,116 @@ export default function ProspectDetailClient({
             Reassign Prospect
           </button>
         </div>
+      </div>
+
+      {/* Tasks Section */}
+      <div className="mb-8 mt-8">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold">Tasks & Follow-ups</h2>
+          <Link
+            href={`/prospects/${prospect.id}/tasks/new`}
+            className="text-green-600 hover:underline"
+          >
+            + New Task
+          </Link>
+        </div>
+
+        {/* Quick Add Form */}
+        <form onSubmit={handleTaskSubmit} className="mb-6 p-4 border rounded">
+          <h3 className="font-medium mb-2">Add Quick Task</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <select
+              value={newTask.type}
+              onChange={(e) =>
+                setNewTask({ ...newTask, type: e.target.value as any })
+              }
+              className="border p-2"
+            >
+              {taskTypes.map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
+            </select>
+            <input
+              type="date"
+              value={newTask.due_date}
+              onChange={(e) =>
+                setNewTask({ ...newTask, due_date: e.target.value })
+              }
+              className="border p-2"
+              required
+            />
+            <button
+              type="submit"
+              disabled={creatingTask}
+              className="bg-blue-600 text-white p-2 rounded"
+            >
+              {creatingTask ? "Adding..." : "Add"}
+            </button>
+          </div>
+          <textarea
+            placeholder="Description (optional)"
+            value={newTask.description}
+            onChange={(e) =>
+              setNewTask({ ...newTask, description: e.target.value })
+            }
+            className="border p-2 mt-2 w-full"
+            rows={2}
+          />
+        </form>
+
+        {/* Task List */}
+        {tasks.length === 0 ? (
+          <p className="text-gray-500">No tasks yet.</p>
+        ) : (
+          <div className="space-y-3">
+            {tasks.map((task) => (
+              <div
+                key={task.id}
+                className={`p-3 border rounded flex justify-between items-start ${
+                  task.status === "completed"
+                    ? "bg-green-50"
+                    : !!task.due_date &&
+                      isBefore(new Date(task.due_date), new Date())
+                    ? "bg-red-100"
+                    : "bg-white"
+                }`}
+              >
+                <div>
+                  <span className="inline-block px-2 py-1 text-xs font-semibold bg-gray-700 rounded mr-2">
+                    {task.type}
+                  </span>
+                  <Link href={`/tasks/${task.id}`}>
+                    <span className="text-gray-700 hover:underline">
+                      {task.description || "No description"}
+                    </span>
+                  </Link>
+                  {!!task.due_date && (
+                    <div className="text-sm text-gray-500 mt-1">
+                      Due: {format(new Date(task.due_date), "MMM d, yyyy")}
+                    </div>
+                  )}
+                </div>
+                <div>
+                  {task.status === "completed" ? (
+                    <span className="text-green-600">✅ Done</span>
+                  ) : !!task.due_date &&
+                    isBefore(new Date(task.due_date), new Date()) ? (
+                    <span className="text-red-600">⚠️ Overdue</span>
+                  ) : (
+                    <span className="text-gray-500">Upcoming</span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Activity Timeline */}
+      <div className="mb-8">
+        <ActivityTimeline entityType="prospect" entityId={prospect.id} />
       </div>
 
       {/* Meta */}
