@@ -9,7 +9,12 @@ export async function fetchProspects(
   ownerFilter?: string | null,
   icpFilter?: string | null,
   pageSize: number = 20,
-  currentPage: number = 1
+  currentPage: number = 1,
+  companyFilter?: string | null,
+  cityFilter?: string | null,
+  stateFilter?: string | null,
+  jobTitleFilter?: string | null,
+  zipCodeFilter?: string | null
 ) {
   const supabaseServer = await createClient();
   let prospectsDataQuery = supabaseServer.from("prospects").select(
@@ -32,7 +37,8 @@ export async function fetchProspects(
         tagged_icp:intended_customer_profiles!tagged_icp_id(title, tag_color),
         created_at,
         status
-      `
+      `,
+    { count: "exact" }
   );
 
   if (!!search) {
@@ -49,7 +55,67 @@ export async function fetchProspects(
     prospectsDataQuery = prospectsDataQuery.eq("tagged_icp_id", icpFilter);
   }
 
-  const { data: allRecords } = await prospectsDataQuery;
+  if (!!companyFilter && companyFilter.trim() !== "") {
+    const companies = companyFilter
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    if (companies.length > 0) {
+      prospectsDataQuery = prospectsDataQuery.or(
+        companies.map((c) => `company.ilike.%${c}%`).join(",")
+      );
+    }
+  }
+
+  if (!!cityFilter && cityFilter.trim() !== "") {
+    const cities = cityFilter
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    if (cities.length > 0) {
+      prospectsDataQuery = prospectsDataQuery.or(
+        cities.map((c) => `city.ilike.%${c}%`).join(",")
+      );
+    }
+  }
+
+  if (!!stateFilter && stateFilter.trim() !== "") {
+    const states = stateFilter
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    if (states.length > 0) {
+      prospectsDataQuery = prospectsDataQuery.or(
+        states.map((s) => `state.ilike.%${s}%`).join(",")
+      );
+    }
+  }
+
+  if (!!jobTitleFilter && jobTitleFilter.trim() !== "") {
+    const jobTitles = jobTitleFilter
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    if (jobTitles.length > 0) {
+      prospectsDataQuery = prospectsDataQuery.or(
+        jobTitles.map((j) => `job_title.ilike.%${j}%`).join(",")
+      );
+    }
+  }
+
+  if (!!zipCodeFilter && zipCodeFilter.trim() !== "") {
+    const zipCodes = zipCodeFilter
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    if (zipCodes.length > 0) {
+      prospectsDataQuery = prospectsDataQuery.or(
+        zipCodes.map((z) => `zip_code.ilike.%${z}%`).join(",")
+      );
+    }
+  }
+
+  const { data: allRecords, count: totalCount } = await prospectsDataQuery;
 
   const prospectsDataQueryPaginated = prospectsDataQuery
     .order("created_at", { ascending: false })
@@ -61,7 +127,7 @@ export async function fetchProspects(
   let { data: prospectsData, error } = await prospectsDataQueryPaginated;
 
   if (error) {
-    console.error("Error fetching deals:", error);
+    console.error("Error fetching prospects:", error);
     throw error;
   }
 
@@ -74,7 +140,7 @@ export async function fetchProspects(
 
   return {
     prospects: (prospectsData as unknown as Prospect[]) || [],
-    count: allRecords?.length || 0,
+    count: totalCount || allRecords?.length || 0,
   };
 }
 
