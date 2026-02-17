@@ -1,5 +1,6 @@
 import { Metadata } from "next";
 import { login } from "./actions";
+import SubmitButton from "./submitButton";
 
 export const metadata: Metadata = {
   title: "Login | NetScrunch by Netpace",
@@ -37,12 +38,7 @@ export default async function LoginPage({
           required
         />
         {errorText && <div className="text-red-500">{errorText}</div>}
-        <button
-          type="submit"
-          className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
-        >
-          Login
-        </button>
+        <SubmitButton />
       </form>
     </div>
   );
