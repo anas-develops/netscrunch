@@ -720,6 +720,12 @@ export default function ProspectsClient({
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex justify-between items-center gap-2">
                         <Link
+                          href={`/prospects/${prospect.id}`}
+                          className="text-blue-500 font-bold cursor-pointer hover:text-blue-200"
+                        >
+                          View
+                        </Link>
+                        <Link
                           href={`/prospects/${prospect.id}/edit`}
                           className="text-blue-500 font-bold cursor-pointer hover:text-blue-200"
                         >
