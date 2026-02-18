@@ -6,7 +6,7 @@ import { format } from "date-fns";
 
 export async function fetchProspects(
   search?: string | null,
-  ownerFilter?: string | null,
+  ownerFilter?: Array<string> | null,
   icpFilter?: Array<string> | null,
   pageSize: number = 20,
   currentPage: number = 1,
@@ -47,8 +47,10 @@ export async function fetchProspects(
     );
   }
 
-  if (!!ownerFilter && ownerFilter !== "all") {
-    prospectsDataQuery = prospectsDataQuery.eq("owner_id", ownerFilter);
+  if (!!ownerFilter && ownerFilter.length > 0) {
+    prospectsDataQuery = prospectsDataQuery.or(
+      ownerFilter.map((id) => `owner_id.eq.${id}`).join(","),
+    );
   }
 
   if (!!icpFilter && icpFilter.length > 0) {

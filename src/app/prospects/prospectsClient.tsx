@@ -72,7 +72,7 @@ export default function ProspectsClient({
   });
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
-  const [ownerFilter, setOwnerFilter] = useState<string>("all");
+  const [ownerFilter, setOwnerFilter] = useState<Array<string>>([]);
   const [icpFilter, setIcpFilter] = useState<Array<string>>([]);
   const [companyFilter, setCompanyFilter] = useState<string>("");
   const [cityFilter, setCityFilter] = useState<string>("");
@@ -447,27 +447,26 @@ export default function ProspectsClient({
 
         {/* Owner */}
         <Select
-          options={[
-            { value: "all", label: "All Owners" },
-            ...(initialData.owners || []),
-          ]}
-          value={
-            ownerFilter === "all"
-              ? { value: "all", label: "All Owners" }
-              : (initialData.owners || []).find(
-                  (owner) => owner.value === ownerFilter,
-                )
+          options={initialData.owners || []}
+          value={initialData.owners?.filter((owner) =>
+            ownerFilter.includes(owner.id),
+          )}
+          onChange={(selected) =>
+            setOwnerFilter(selected?.map((owner) => owner.value) || [])
           }
-          onChange={(selected) => setOwnerFilter(selected?.value || "all")}
           placeholder="Select Owner"
           components={{
             Option: CustomSingleValue,
           }}
+          isMulti
         />
 
         {/* ICP */}
         <Select
           options={initialData.icps || []}
+          value={initialData.icps?.filter((icp) =>
+            icpFilter.includes(icp.value),
+          )}
           onChange={(selected) => {
             setIcpFilter(selected?.map((icp) => icp.value) || []);
           }}
@@ -490,8 +489,8 @@ export default function ProspectsClient({
 
         {/* Clear Filters */}
         {(search ||
-          ownerFilter !== "all" ||
-          icpFilter.length > 0 ||
+          Array.isArray(ownerFilter) ||
+          Array.isArray(icpFilter) ||
           companyFilter ||
           cityFilter ||
           stateFilter ||
@@ -500,7 +499,7 @@ export default function ProspectsClient({
           <button
             onClick={() => {
               setSearch("");
-              setOwnerFilter("all");
+              setOwnerFilter([]);
               setIcpFilter([]);
               setCompanyFilter("");
               setCityFilter("");
