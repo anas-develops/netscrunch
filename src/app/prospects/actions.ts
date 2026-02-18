@@ -48,15 +48,11 @@ export async function fetchProspects(
   }
 
   if (!!ownerFilter && ownerFilter.length > 0) {
-    prospectsDataQuery = prospectsDataQuery.or(
-      ownerFilter.map((id) => `owner_id.eq.${id}`).join(","),
-    );
+    prospectsDataQuery = prospectsDataQuery.in("owner_id", ownerFilter);
   }
 
   if (!!icpFilter && icpFilter.length > 0) {
-    prospectsDataQuery = prospectsDataQuery.or(
-      icpFilter.map((id) => `tagged_icp_id.eq.${id}`).join(","),
-    );
+    prospectsDataQuery = prospectsDataQuery.in("tagged_icp_id", icpFilter);
   }
 
   if (!!companyFilter && companyFilter.trim() !== "") {

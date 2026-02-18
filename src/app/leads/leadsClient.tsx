@@ -69,6 +69,10 @@ export default function LeadsClient({
     sourceFilter?: string[] | null,
     ownerFilter?: string[] | null,
     companyFilter?: string | null,
+    cityFilter?: string | null,
+    stateFilter?: string | null,
+    jobTitleFilter?: string | null,
+    zipCodeFilter?: string | null,
     pageSize?: number,
     currentPage?: number,
   ) => Promise<{
@@ -92,6 +96,10 @@ export default function LeadsClient({
   const [sourceFilter, setSourceFilter] = useState<string[]>([]);
   const [ownerFilter, setOwnerFilter] = useState<string[]>([]);
   const [companyFilter, setCompanyFilter] = useState<string>("");
+  const [cityFilter, setCityFilter] = useState<string>("");
+  const [stateFilter, setStateFilter] = useState<string>("");
+  const [jobTitleFilter, setJobTitleFilter] = useState<string>("");
+  const [zipCodeFilter, setZipCodeFilter] = useState<string>("");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedLeads, setSelectedLeads] = useState<Set<string>>(new Set());
   const [showBulkActions, setShowBulkActions] = useState(false);
@@ -224,6 +232,10 @@ export default function LeadsClient({
         sourceFilter,
         ownerFilter,
         companyFilter,
+        cityFilter,
+        stateFilter,
+        jobTitleFilter,
+        zipCodeFilter,
         PAGE_SIZE,
         currentPage,
       );
@@ -269,6 +281,10 @@ export default function LeadsClient({
           sourceFilter,
           ownerFilter,
           companyFilter,
+          cityFilter,
+          stateFilter,
+          jobTitleFilter,
+          zipCodeFilter,
           PAGE_SIZE,
           currentPage,
         );
@@ -310,6 +326,10 @@ export default function LeadsClient({
     sourceFilter,
     ownerFilter,
     companyFilter,
+    cityFilter,
+    stateFilter,
+    jobTitleFilter,
+    zipCodeFilter,
     currentPage,
   ]);
 
@@ -318,7 +338,7 @@ export default function LeadsClient({
   // --- Reset to page 1 when filters change ---
   useEffect(() => {
     setCurrentPage(1);
-  }, [search, statusFilter, sourceFilter, ownerFilter, companyFilter]);
+  }, [search, statusFilter, sourceFilter, ownerFilter, companyFilter, cityFilter, stateFilter, jobTitleFilter, zipCodeFilter]);
 
   if (loading) {
     return (
@@ -461,7 +481,11 @@ export default function LeadsClient({
           statusFilter.length > 0 ||
           sourceFilter.length > 0 ||
           ownerFilter.length > 0 ||
-          companyFilter) && (
+          companyFilter ||
+          cityFilter ||
+          stateFilter ||
+          jobTitleFilter ||
+          zipCodeFilter) && (
           <button
             onClick={() => {
               setSearch("");
@@ -469,16 +493,21 @@ export default function LeadsClient({
               setSourceFilter([]);
               setOwnerFilter([]);
               setCompanyFilter("");
+              setCityFilter("");
+              setStateFilter("");
+              setJobTitleFilter("");
+              setZipCodeFilter("");
             }}
             className="text-sm text-red-600 hover:underline self-end"
           >
-            Clear filters
+            Clear all filters
           </button>
         )}
       </div>
 
-      {/* Company Filter */}
-      <div className="mb-6">
+      {/* Additional Filters */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+        {/* Company */}
         <div>
           <label className="block text-xs font-medium text-gray-600 mb-1">
             Company (comma-separated)
@@ -488,6 +517,62 @@ export default function LeadsClient({
             placeholder="e.g. Acme, Tech Corp"
             value={companyFilter}
             onChange={(e) => setCompanyFilter(e.target.value)}
+            className="w-full px-3 py-2 border rounded text-sm"
+          />
+        </div>
+
+        {/* Job Title */}
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">
+            Job Title (comma-separated)
+          </label>
+          <input
+            type="text"
+            placeholder="e.g. CEO, Manager"
+            value={jobTitleFilter}
+            onChange={(e) => setJobTitleFilter(e.target.value)}
+            className="w-full px-3 py-2 border rounded text-sm"
+          />
+        </div>
+
+        {/* City */}
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">
+            City (comma-separated)
+          </label>
+          <input
+            type="text"
+            placeholder="e.g. New York, LA"
+            value={cityFilter}
+            onChange={(e) => setCityFilter(e.target.value)}
+            className="w-full px-3 py-2 border rounded text-sm"
+          />
+        </div>
+
+        {/* State */}
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">
+            State (comma-separated)
+          </label>
+          <input
+            type="text"
+            placeholder="e.g. CA, NY"
+            value={stateFilter}
+            onChange={(e) => setStateFilter(e.target.value)}
+            className="w-full px-3 py-2 border rounded text-sm"
+          />
+        </div>
+
+        {/* Zip Code */}
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">
+            Zip Code (comma-separated)
+          </label>
+          <input
+            type="text"
+            placeholder="e.g. 10001, 90210"
+            value={zipCodeFilter}
+            onChange={(e) => setZipCodeFilter(e.target.value)}
             className="w-full px-3 py-2 border rounded text-sm"
           />
         </div>
