@@ -15,21 +15,23 @@ import {
 } from "lucide-react";
 import { Lead, Owner } from "./types";
 import Link from "next/link";
+import Select from "react-select";
+import { components } from "react-select";
 import { createClient } from "@/lib/supabase/client";
 
 const PAGE_SIZE = 20;
 const STATUS_OPTIONS = [
-  "Warmed-Up",
-  "Negotiating",
-  "Service Initiated",
-  "Service Declined",
+  { value: "Warmed-Up", label: "Warmed-Up" },
+  { value: "Negotiating", label: "Negotiating" },
+  { value: "Service Initiated", label: "Service Initiated" },
+  { value: "Service Declined", label: "Service Declined" },
 ];
 const SOURCE_OPTIONS = [
-  "Upwork",
-  "Freelancer",
-  "Recruitment",
-  "B2B",
-  "Referral",
+  { value: "Upwork", label: "Upwork" },
+  { value: "Freelancer", label: "Freelancer" },
+  { value: "Recruitment", label: "Recruitment" },
+  { value: "B2B", label: "B2B" },
+  { value: "Referral", label: "Referral" },
 ];
 
 // Helper functions for localStorage
@@ -63,9 +65,10 @@ export default function LeadsClient({
   >;
   fetchLeads: (
     search?: string | null,
-    statusFilter?: string | null,
-    sourceFilter?: string | null,
-    ownerFilter?: string | null,
+    statusFilter?: string[] | null,
+    sourceFilter?: string[] | null,
+    ownerFilter?: string[] | null,
+    companyFilter?: string | null,
     pageSize?: number,
     currentPage?: number,
   ) => Promise<{
@@ -79,11 +82,16 @@ export default function LeadsClient({
     count: initialData.count || 0,
   });
   const owners: Owner[] = initialData.owners || [];
+  const ownerOptions = owners.map((o) => ({
+    value: o.id,
+    label: o.full_name,
+  }));
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [sourceFilter, setSourceFilter] = useState<string>("all");
-  const [ownerFilter, setOwnerFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string[]>([]);
+  const [sourceFilter, setSourceFilter] = useState<string[]>([]);
+  const [ownerFilter, setOwnerFilter] = useState<string[]>([]);
+  const [companyFilter, setCompanyFilter] = useState<string>("");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedLeads, setSelectedLeads] = useState<Set<string>>(new Set());
   const [showBulkActions, setShowBulkActions] = useState(false);
@@ -99,6 +107,16 @@ export default function LeadsClient({
   useEffect(() => {
     setPendingUpdatesState(getPendingUpdates());
   }, []);
+
+  const CustomSingleValue = (props: any) => {
+    return (
+      <components.Option {...props}>
+        <div className="flex items-center">
+          <span className="text-black">{props.data.label}</span>
+        </div>
+      </components.Option>
+    );
+  };
 
   // Toggle selection of a single lead
   const toggleLeadSelection = (id: string) => {
@@ -205,6 +223,7 @@ export default function LeadsClient({
         statusFilter,
         sourceFilter,
         ownerFilter,
+        companyFilter,
         PAGE_SIZE,
         currentPage,
       );
@@ -249,6 +268,7 @@ export default function LeadsClient({
           statusFilter,
           sourceFilter,
           ownerFilter,
+          companyFilter,
           PAGE_SIZE,
           currentPage,
         );
@@ -284,14 +304,21 @@ export default function LeadsClient({
     }
 
     firstLoad.current = false;
-  }, [search, statusFilter, sourceFilter, ownerFilter, currentPage]);
+  }, [
+    search,
+    statusFilter,
+    sourceFilter,
+    ownerFilter,
+    companyFilter,
+    currentPage,
+  ]);
 
   const totalPages = Math.ceil(leads.count / PAGE_SIZE);
 
   // --- Reset to page 1 when filters change ---
   useEffect(() => {
     setCurrentPage(1);
-  }, [search, statusFilter, sourceFilter, ownerFilter]);
+  }, [search, statusFilter, sourceFilter, ownerFilter, companyFilter]);
 
   if (loading) {
     return (
@@ -378,46 +405,46 @@ export default function LeadsClient({
         </div>
 
         {/* Status */}
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="border rounded px-3 py-2"
-        >
-          <option value="all">All Statuses</option>
-          {STATUS_OPTIONS.map((s) => (
-            <option key={s} value={s}>
-              {s}
-            </option>
-          ))}
-        </select>
+        <Select
+          options={STATUS_OPTIONS}
+          value={STATUS_OPTIONS.filter((s) => statusFilter.includes(s.value))}
+          onChange={(selected) =>
+            setStatusFilter(selected?.map((s) => s.value) || [])
+          }
+          placeholder="Select Status"
+          components={{
+            Option: CustomSingleValue,
+          }}
+          isMulti
+        />
 
         {/* Source */}
-        <select
-          value={sourceFilter}
-          onChange={(e) => setSourceFilter(e.target.value)}
-          className="border rounded px-3 py-2"
-        >
-          <option value="all">All Sources</option>
-          {SOURCE_OPTIONS.map((s) => (
-            <option key={s} value={s}>
-              {s}
-            </option>
-          ))}
-        </select>
+        <Select
+          options={SOURCE_OPTIONS}
+          value={SOURCE_OPTIONS.filter((s) => sourceFilter.includes(s.value))}
+          onChange={(selected) =>
+            setSourceFilter(selected?.map((s) => s.value) || [])
+          }
+          placeholder="Select Source"
+          components={{
+            Option: CustomSingleValue,
+          }}
+          isMulti
+        />
 
         {/* Owner */}
-        <select
-          value={ownerFilter}
-          onChange={(e) => setOwnerFilter(e.target.value)}
-          className="border rounded px-3 py-2"
-        >
-          <option value="all">All Owners</option>
-          {owners.map((owner) => (
-            <option key={owner.id} value={owner.id}>
-              {owner.full_name}
-            </option>
-          ))}
-        </select>
+        <Select
+          options={ownerOptions}
+          value={ownerOptions.filter((o) => ownerFilter.includes(o.value))}
+          onChange={(selected) =>
+            setOwnerFilter(selected?.map((o) => o.value) || [])
+          }
+          placeholder="Select Owner"
+          components={{
+            Option: CustomSingleValue,
+          }}
+          isMulti
+        />
 
         {/* Refresh Button */}
         <button
@@ -431,21 +458,39 @@ export default function LeadsClient({
 
         {/* Clear Filters */}
         {(search ||
-          statusFilter !== "all" ||
-          sourceFilter !== "all" ||
-          ownerFilter !== "all") && (
+          statusFilter.length > 0 ||
+          sourceFilter.length > 0 ||
+          ownerFilter.length > 0 ||
+          companyFilter) && (
           <button
             onClick={() => {
               setSearch("");
-              setStatusFilter("all");
-              setSourceFilter("all");
-              setOwnerFilter("all");
+              setStatusFilter([]);
+              setSourceFilter([]);
+              setOwnerFilter([]);
+              setCompanyFilter("");
             }}
             className="text-sm text-red-600 hover:underline self-end"
           >
             Clear filters
           </button>
         )}
+      </div>
+
+      {/* Company Filter */}
+      <div className="mb-6">
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">
+            Company (comma-separated)
+          </label>
+          <input
+            type="text"
+            placeholder="e.g. Acme, Tech Corp"
+            value={companyFilter}
+            onChange={(e) => setCompanyFilter(e.target.value)}
+            className="w-full px-3 py-2 border rounded text-sm"
+          />
+        </div>
       </div>
 
       {/* Results Count */}
@@ -472,8 +517,8 @@ export default function LeadsClient({
               >
                 <option value="">Select Status</option>
                 {STATUS_OPTIONS.map((status) => (
-                  <option key={status} value={status}>
-                    {status}
+                  <option key={status.value} value={status.value}>
+                    {status.label}
                   </option>
                 ))}
               </select>
@@ -508,7 +553,7 @@ export default function LeadsClient({
           No leads found. Try adjusting your filters.
         </div>
       ) : (
-        <div className="overflow-x-auto max-w-[75vw]">
+        <div className="overflow-x-auto">
           <div
             className={`overflow-x-auto bg-white rounded-lg border ${
               showBulkActions ? "rounded-t-none" : ""
@@ -529,16 +574,16 @@ export default function LeadsClient({
                     />
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
-                    Lead
+                    Name
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
                     Company
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
-                    Source
+                    Status
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
-                    Status
+                    Source
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
                     Owner
@@ -568,45 +613,37 @@ export default function LeadsClient({
                       />
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <User className="h-5 w-5 text-gray-400 mr-2" />
-                        <span className="font-medium">{lead.name}</span>
-                      </div>
+                      <span className="font-medium">{lead.name}</span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {lead.company || "—"}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="inline-flex items-center">
-                        <Tag className="h-4 w-4 mr-1 text-gray-500" />
-                        {lead.source}
-                      </span>
+                      {lead.company || "-"}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <StatusBadge status={lead.status} leadId={lead.id} />
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {lead.owner_id.full_name}
+                      {lead.source}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {lead.owner_id?.full_name || "-"}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
                       {lead.created_at}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <div className="flex justify-between">
+                      <div className="flex justify-end gap-2">
                         <Link
                           href={`/leads/${lead.id}`}
                           className="text-blue-500 font-bold cursor-pointer hover:text-blue-200"
                         >
                           View
                         </Link>
-                        {!!lead.prospect_id && (
-                          <Link
-                            href={`/prospects/${lead.prospect_id}/edit`}
-                            className="text-blue-500 font-bold cursor-pointer hover:text-blue-200"
-                          >
-                            View Prospect
-                          </Link>
-                        )}
+                        <Link
+                          href={`/leads/${lead.id}/edit`}
+                          className="text-blue-500 font-bold cursor-pointer hover:text-blue-200"
+                        >
+                          Edit
+                        </Link>
                       </div>
                     </td>
                   </tr>

@@ -6,9 +6,10 @@ import { createClient } from "@/lib/supabase/server";
 
 export async function fetchLeads(
   search?: string | null,
-  statusFilter?: string | null,
-  sourceFilter?: string | null,
-  ownerFilter?: string | null,
+  statusFilter?: string[] | null,
+  sourceFilter?: string[] | null,
+  ownerFilter?: string[] | null,
+  companyFilter?: string | null,
   pageSize: number = 20,
   currentPage: number = 1
 ): Promise<{
@@ -28,19 +29,31 @@ export async function fetchLeads(
     );
   }
 
-  if (!!statusFilter && statusFilter !== "all") {
-    leadDataQuery = leadDataQuery.eq("status", statusFilter);
+  if (!!statusFilter && statusFilter.length > 0) {
+    leadDataQuery = leadDataQuery.in("status", statusFilter);
   }
 
-  if (!!sourceFilter && sourceFilter !== "all") {
-    leadDataQuery = leadDataQuery.eq("source", sourceFilter);
+  if (!!sourceFilter && sourceFilter.length > 0) {
+    leadDataQuery = leadDataQuery.in("source", sourceFilter);
   }
 
-  if (!!ownerFilter && sourceFilter !== "all") {
-    leadDataQuery = leadDataQuery.eq("owner_id", ownerFilter);
+  if (!!ownerFilter && ownerFilter.length > 0) {
+    leadDataQuery = leadDataQuery.in("owner_id", ownerFilter);
   }
 
-  const { data: allRecords } = await leadDataQuery;
+  if (!!companyFilter && companyFilter.trim() !== "") {
+    const companies = companyFilter
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    if (companies.length > 0) {
+      leadDataQuery = leadDataQuery.or(
+        companies.map((c) => `company.ilike.%${c}%`).join(",")
+      );
+    }
+  }
+
+  const { data: allRecords, count: totalCount } = await leadDataQuery;
 
   const leadDataQueryPaginated = leadDataQuery
     .order("created_at", { ascending: false })
@@ -60,7 +73,7 @@ export async function fetchLeads(
 
   return {
     leads: (leadData as unknown as Lead[]) || [],
-    count: allRecords?.length || 0,
+    count: totalCount || allRecords?.length || 0,
   };
 }
 
