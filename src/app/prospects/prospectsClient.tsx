@@ -73,7 +73,7 @@ export default function ProspectsClient({
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
   const [ownerFilter, setOwnerFilter] = useState<string>("all");
-  const [icpFilter, setIcpFilter] = useState<string>("all");
+  const [icpFilter, setIcpFilter] = useState<Array<string>>([]);
   const [companyFilter, setCompanyFilter] = useState<string>("");
   const [cityFilter, setCityFilter] = useState<string>("");
   const [stateFilter, setStateFilter] = useState<string>("");
@@ -81,7 +81,7 @@ export default function ProspectsClient({
   const [zipCodeFilter, setZipCodeFilter] = useState<string>("");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedProspects, setSelectedProspects] = useState<Set<string>>(
-    new Set()
+    new Set(),
   );
   const [showBulkActions, setShowBulkActions] = useState(false);
   const [bulkActionStatus, setBulkActionStatus] = useState<string | null>(null);
@@ -172,10 +172,8 @@ export default function ProspectsClient({
       "bulk-convert-to-leads",
       {
         body: { prospectIds },
-      }
+      },
     );
-
-    console.log("data", data);
 
     if (error) {
       alert(error);
@@ -188,7 +186,7 @@ export default function ProspectsClient({
 
   const bulkUpdateProspectStatus = async (
     prospectIds: string[],
-    status: string
+    status: string,
   ) => {
     const {
       data: { session },
@@ -199,10 +197,8 @@ export default function ProspectsClient({
       "bulk-update-prospect-status",
       {
         body: { prospectIds, status },
-      }
+      },
     );
-
-    console.log("data", data);
 
     if (error) {
       // Clear pending updates for the failed prospect IDs
@@ -247,7 +243,7 @@ export default function ProspectsClient({
     // In a real implementation, you would call an API to update the statuses
     // For now, we'll just show an alert
     alert(
-      `Updating ${selectedProspects.size} prospects to status: ${bulkActionStatus}`
+      `Updating ${selectedProspects.size} prospects to status: ${bulkActionStatus}`,
     );
 
     // Reset selections after action
@@ -267,7 +263,7 @@ export default function ProspectsClient({
         ownerFilter,
         icpFilter,
         PAGE_SIZE,
-        currentPage
+        currentPage,
       );
 
       setProspects({ prospects, count });
@@ -305,8 +301,6 @@ export default function ProspectsClient({
   useEffect(() => {
     if (!firstLoad.current) {
       (async function () {
-        console.log("icpFilter", icpFilter);
-
         const { prospects, count } = await fetchProspects(
           search,
           ownerFilter,
@@ -317,7 +311,7 @@ export default function ProspectsClient({
           cityFilter,
           stateFilter,
           jobTitleFilter,
-          zipCodeFilter
+          zipCodeFilter,
         );
 
         setProspects({ prospects, count });
@@ -351,7 +345,17 @@ export default function ProspectsClient({
     }
 
     firstLoad.current = false;
-  }, [search, ownerFilter, icpFilter, currentPage, companyFilter, cityFilter, stateFilter, jobTitleFilter, zipCodeFilter]);
+  }, [
+    search,
+    ownerFilter,
+    icpFilter,
+    currentPage,
+    companyFilter,
+    cityFilter,
+    stateFilter,
+    jobTitleFilter,
+    zipCodeFilter,
+  ]);
 
   const totalPages = Math.ceil(prospects.count / PAGE_SIZE);
 
@@ -451,7 +455,7 @@ export default function ProspectsClient({
             ownerFilter === "all"
               ? { value: "all", label: "All Owners" }
               : (initialData.owners || []).find(
-                  (owner) => owner.value === ownerFilter
+                  (owner) => owner.value === ownerFilter,
                 )
           }
           onChange={(selected) => setOwnerFilter(selected?.value || "all")}
@@ -463,22 +467,15 @@ export default function ProspectsClient({
 
         {/* ICP */}
         <Select
-          options={[
-            { value: "all", label: "All ICP Tags" },
-            ...(initialData.icps || []),
-          ]}
-          value={
-            icpFilter === "all"
-              ? { value: "all", label: "All ICP Tags" }
-              : (initialData.icps || []).find((icp) => icp.value === icpFilter)
-          }
+          options={initialData.icps || []}
           onChange={(selected) => {
-            setIcpFilter(selected?.value || "all");
+            setIcpFilter(selected?.map((icp) => icp.value) || []);
           }}
           placeholder="Select ICP Tag"
           components={{
             Option: CustomIcpOption,
           }}
+          isMulti
         />
 
         {/* Refresh Button */}
@@ -492,12 +489,19 @@ export default function ProspectsClient({
         </button>
 
         {/* Clear Filters */}
-        {(search || ownerFilter !== "all" || icpFilter !== "all" || companyFilter || cityFilter || stateFilter || jobTitleFilter || zipCodeFilter) && (
+        {(search ||
+          ownerFilter !== "all" ||
+          icpFilter.length > 0 ||
+          companyFilter ||
+          cityFilter ||
+          stateFilter ||
+          jobTitleFilter ||
+          zipCodeFilter) && (
           <button
             onClick={() => {
               setSearch("");
               setOwnerFilter("all");
-              setIcpFilter("all");
+              setIcpFilter([]);
               setCompanyFilter("");
               setCityFilter("");
               setStateFilter("");

@@ -67,7 +67,7 @@ export default function LeadsClient({
     sourceFilter?: string | null,
     ownerFilter?: string | null,
     pageSize?: number,
-    currentPage?: number
+    currentPage?: number,
   ) => Promise<{
     leads: Lead[];
     count: number;
@@ -146,7 +146,7 @@ export default function LeadsClient({
     // In a real implementation, you would call an API to update the statuses
     // For now, we'll just show an alert
     alert(
-      `Updating ${selectedLeads.size} leads to status: ${bulkActionStatus}`
+      `Updating ${selectedLeads.size} leads to status: ${bulkActionStatus}`,
     );
 
     // Reset selections after action
@@ -168,10 +168,8 @@ export default function LeadsClient({
       "bulk-update-lead-status",
       {
         body: { leadIds, status },
-      }
+      },
     );
-
-    console.log("data", data);
 
     if (error) {
       // Clear pending updates for the failed lead IDs
@@ -208,7 +206,7 @@ export default function LeadsClient({
         sourceFilter,
         ownerFilter,
         PAGE_SIZE,
-        currentPage
+        currentPage,
       );
 
       setLeads({ leads, count });
@@ -252,7 +250,7 @@ export default function LeadsClient({
           sourceFilter,
           ownerFilter,
           PAGE_SIZE,
-          currentPage
+          currentPage,
         );
 
         setLeads({ leads, count });

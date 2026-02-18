@@ -316,9 +316,9 @@ export default function ProspectDetailClient({
                   task.status === "completed"
                     ? "bg-green-50"
                     : !!task.due_date &&
-                      isBefore(new Date(task.due_date), new Date())
-                    ? "bg-red-100"
-                    : "bg-white"
+                        isBefore(new Date(task.due_date), new Date())
+                      ? "bg-red-100"
+                      : "bg-white"
                 }`}
               >
                 <div>

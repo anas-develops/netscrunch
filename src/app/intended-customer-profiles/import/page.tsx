@@ -85,15 +85,13 @@ export default function ImportIntendedCustomerProfilesPage() {
     const errors: string[] = [];
 
     rows.forEach((row, idx) => {
-      console.log("row", row);
-
       // Validate required
       const missing = requiredFields.filter(
-        (f) => !row[f] || row[f].trim() === ""
+        (f) => !row[f] || row[f].trim() === "",
       );
       if (missing.length > 0) {
         errors.push(
-          `Row ${idx + 2}: Missing required fields: ${missing.join(", ")}`
+          `Row ${idx + 2}: Missing required fields: ${missing.join(", ")}`,
         );
         return;
       }

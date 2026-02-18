@@ -7,14 +7,14 @@ import { format } from "date-fns";
 export async function fetchProspects(
   search?: string | null,
   ownerFilter?: string | null,
-  icpFilter?: string | null,
+  icpFilter?: Array<string> | null,
   pageSize: number = 20,
   currentPage: number = 1,
   companyFilter?: string | null,
   cityFilter?: string | null,
   stateFilter?: string | null,
   jobTitleFilter?: string | null,
-  zipCodeFilter?: string | null
+  zipCodeFilter?: string | null,
 ) {
   const supabaseServer = await createClient();
   let prospectsDataQuery = supabaseServer.from("prospects").select(
@@ -38,12 +38,12 @@ export async function fetchProspects(
         created_at,
         status
       `,
-    { count: "exact" }
+    { count: "exact" },
   );
 
   if (!!search) {
     prospectsDataQuery = prospectsDataQuery.or(
-      `name.ilike.%${search}%,company.ilike.%${search}%,job_title.ilike.%${search}%,email.ilike.%${search}%,city.ilike.%${search}%,state.ilike.%${search}%`
+      `name.ilike.%${search}%,company.ilike.%${search}%,job_title.ilike.%${search}%,email.ilike.%${search}%,city.ilike.%${search}%,state.ilike.%${search}%`,
     );
   }
 
@@ -51,8 +51,10 @@ export async function fetchProspects(
     prospectsDataQuery = prospectsDataQuery.eq("owner_id", ownerFilter);
   }
 
-  if (!!icpFilter && icpFilter !== "all") {
-    prospectsDataQuery = prospectsDataQuery.eq("tagged_icp_id", icpFilter);
+  if (!!icpFilter && icpFilter.length > 0) {
+    prospectsDataQuery = prospectsDataQuery.or(
+      icpFilter.map((id) => `tagged_icp_id.eq.${id}`).join(","),
+    );
   }
 
   if (!!companyFilter && companyFilter.trim() !== "") {
@@ -62,7 +64,7 @@ export async function fetchProspects(
       .filter(Boolean);
     if (companies.length > 0) {
       prospectsDataQuery = prospectsDataQuery.or(
-        companies.map((c) => `company.ilike.%${c}%`).join(",")
+        companies.map((c) => `company.ilike.%${c}%`).join(","),
       );
     }
   }
@@ -74,7 +76,7 @@ export async function fetchProspects(
       .filter(Boolean);
     if (cities.length > 0) {
       prospectsDataQuery = prospectsDataQuery.or(
-        cities.map((c) => `city.ilike.%${c}%`).join(",")
+        cities.map((c) => `city.ilike.%${c}%`).join(","),
       );
     }
   }
@@ -86,7 +88,7 @@ export async function fetchProspects(
       .filter(Boolean);
     if (states.length > 0) {
       prospectsDataQuery = prospectsDataQuery.or(
-        states.map((s) => `state.ilike.%${s}%`).join(",")
+        states.map((s) => `state.ilike.%${s}%`).join(","),
       );
     }
   }
@@ -98,7 +100,7 @@ export async function fetchProspects(
       .filter(Boolean);
     if (jobTitles.length > 0) {
       prospectsDataQuery = prospectsDataQuery.or(
-        jobTitles.map((j) => `job_title.ilike.%${j}%`).join(",")
+        jobTitles.map((j) => `job_title.ilike.%${j}%`).join(","),
       );
     }
   }
@@ -110,7 +112,7 @@ export async function fetchProspects(
       .filter(Boolean);
     if (zipCodes.length > 0) {
       prospectsDataQuery = prospectsDataQuery.or(
-        zipCodes.map((z) => `zip_code.ilike.%${z}%`).join(",")
+        zipCodes.map((z) => `zip_code.ilike.%${z}%`).join(","),
       );
     }
   }
@@ -121,7 +123,7 @@ export async function fetchProspects(
     .order("created_at", { ascending: false })
     .range(
       pageSize * (currentPage - 1),
-      pageSize * (currentPage - 1) + pageSize - 1
+      pageSize * (currentPage - 1) + pageSize - 1,
     );
 
   let { data: prospectsData, error } = await prospectsDataQueryPaginated;

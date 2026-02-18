@@ -10,7 +10,7 @@ export async function fetchGlobalActivities(
     entityType: "deal" | "lead" | "task" | null;
   },
   currentPage: number = 1,
-  pageSize: number = 50
+  pageSize: number = 50,
 ) {
   const supabase = await createClient();
 
@@ -28,7 +28,7 @@ export async function fetchGlobalActivities(
         entity_id,
         user:profiles!user_id (id, full_name, department)
       `,
-      { count: "exact" }
+      { count: "exact" },
     )
     .order("timestamp", { ascending: false });
 
@@ -45,8 +45,6 @@ export async function fetchGlobalActivities(
   if (!!filters.endDate) {
     query = query.lte("timestamp", filters.endDate);
   }
-
-  console.log("filters", filters);
 
   if (!!filters.entityType) {
     query = query.eq("entity_type", filters.entityType);
@@ -86,7 +84,7 @@ export async function fetchGlobalActivities(
       ? supabase
           .from("deals")
           .select(
-            "id, name, value, stage, leads!lead_id(name, company, source)"
+            "id, name, value, stage, leads!lead_id(name, company, source)",
           )
           .in("id", dealIds)
       : Promise.resolve({ data: [] }),
@@ -101,7 +99,7 @@ export async function fetchGlobalActivities(
             description,
             leads!lead_id(name, company, source),
             deals!deal_id(name, leads!lead_id(name, company, source))
-          `
+          `,
           )
           .in("id", taskIds)
       : Promise.resolve({ data: [] }),
@@ -109,15 +107,15 @@ export async function fetchGlobalActivities(
 
   // 4. Create lookup maps
   const leadsMap = new Map(
-    leadData?.data?.map((lead) => [lead.id, lead]) || []
+    leadData?.data?.map((lead) => [lead.id, lead]) || [],
   );
 
   const dealsMap = new Map(
-    dealData?.data?.map((deal) => [deal.id, deal]) || []
+    dealData?.data?.map((deal) => [deal.id, deal]) || [],
   );
 
   const tasksMap = new Map(
-    taskData?.data?.map((task) => [task.id, task]) || []
+    taskData?.data?.map((task) => [task.id, task]) || [],
   );
 
   // 5. Enrich activities with full entities
