@@ -1,7 +1,7 @@
 "use server";
 
 import { format } from "date-fns";
-import { Lead } from "./types";
+import { Lead, IntendedCustomerProfile } from "./types";
 import { createClient } from "@/lib/supabase/server";
 
 export async function fetchLeads(
@@ -10,6 +10,7 @@ export async function fetchLeads(
   sourceFilter?: string[] | null,
   ownerFilter?: string[] | null,
   companyFilter?: string | null,
+  icpFilter?: string[] | null,
   // New Prospect Filters
   cityFilter?: string | null,
   stateFilter?: string | null,
@@ -48,6 +49,10 @@ export async function fetchLeads(
   if (!!ownerFilter && ownerFilter.length > 0) {
     // Since we flattened owner_full_name, we filter on owner_id still
     leadDataQuery = leadDataQuery.in("owner_id", ownerFilter);
+  }
+
+  if (!!icpFilter && icpFilter.length > 0) {
+    leadDataQuery = leadDataQuery.in("tagged_icp_id", icpFilter);
   }
 
   if (!!companyFilter && companyFilter.trim() !== "") {
@@ -147,13 +152,25 @@ export async function fetchLeads(
   };
 }
 
-export async function fetchData(): Promise<
-  { id: any; full_name: any }[] | null
-> {
+export async function fetchData(): Promise<{
+  ownerData: { id: any; full_name: any }[] | null;
+  icpData: Array<IntendedCustomerProfile & { value: string; label: string }>;
+}> {
   const supabaseServer = await createClient();
   const { data: ownerData } = await supabaseServer
     .from("profiles")
     .select("id, full_name");
 
-  return ownerData;
+  const { data: icpData } = await supabaseServer
+    .from("intended_customer_profiles")
+    .select("id, title, tag_color");
+
+  return {
+    ownerData: ownerData || [],
+    icpData: (icpData || []).map((icp) => ({
+      value: icp.id,
+      label: icp.title,
+      tag_color: icp.tag_color,
+    })),
+  };
 }

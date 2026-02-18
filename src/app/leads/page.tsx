@@ -7,7 +7,7 @@ export const metadata: Metadata = {
 };
 
 export default async function LeadsPage() {
-  const ownerData = await fetchData();
+  const { ownerData, icpData } = await fetchData();
   const leads = await fetchLeads();
 
   return (
@@ -18,6 +18,7 @@ export default async function LeadsPage() {
         count: leads.count,
         leads: leads.leads,
         owners: ownerData,
+        icps: icpData,
       }}
     />
   );

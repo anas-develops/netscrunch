@@ -13,7 +13,7 @@ import {
   Square,
   RotateCcw,
 } from "lucide-react";
-import { Lead, Owner } from "./types";
+import { Lead, Owner, IntendedCustomerProfile } from "./types";
 import Link from "next/link";
 import Select from "react-select";
 import { components } from "react-select";
@@ -69,6 +69,7 @@ export default function LeadsClient({
     sourceFilter?: string[] | null,
     ownerFilter?: string[] | null,
     companyFilter?: string | null,
+    icpFilter?: string[] | null,
     cityFilter?: string | null,
     stateFilter?: string | null,
     jobTitleFilter?: string | null,
@@ -79,13 +80,25 @@ export default function LeadsClient({
     leads: Lead[];
     count: number;
   }>;
-  initialData: { leads: Lead[]; owners: Owner[] | null; count: number };
+  initialData: {
+    leads: Lead[];
+    owners: Owner[] | null;
+    icps: Array<
+      IntendedCustomerProfile & {
+        value: string;
+        label: string;
+        tag_color: string;
+      }
+    > | null;
+    count: number;
+  };
 }) {
   const [leads, setLeads] = useState<{ leads: Lead[]; count: number }>({
     leads: initialData.leads || [],
     count: initialData.count || 0,
   });
   const owners: Owner[] = initialData.owners || [];
+  const icps = initialData.icps || [];
   const ownerOptions = owners.map((o) => ({
     value: o.id,
     label: o.full_name,
@@ -95,6 +108,7 @@ export default function LeadsClient({
   const [statusFilter, setStatusFilter] = useState<string[]>([]);
   const [sourceFilter, setSourceFilter] = useState<string[]>([]);
   const [ownerFilter, setOwnerFilter] = useState<string[]>([]);
+  const [icpFilter, setIcpFilter] = useState<string[]>([]);
   const [companyFilter, setCompanyFilter] = useState<string>("");
   const [cityFilter, setCityFilter] = useState<string>("");
   const [stateFilter, setStateFilter] = useState<string>("");
@@ -121,6 +135,22 @@ export default function LeadsClient({
       <components.Option {...props}>
         <div className="flex items-center">
           <span className="text-black">{props.data.label}</span>
+        </div>
+      </components.Option>
+    );
+  };
+
+  // Custom Option component to display color in the ICP dropdown
+  const CustomIcpOption = (props: any) => {
+    const { data } = props;
+    return (
+      <components.Option {...props}>
+        <div className="flex items-center">
+          <div
+            className="w-4 h-4 rounded mr-2 border border-gray-300"
+            style={{ backgroundColor: data.tag_color }}
+          />
+          <span className="text-black">{data.label}</span>
         </div>
       </components.Option>
     );
@@ -232,6 +262,7 @@ export default function LeadsClient({
         sourceFilter,
         ownerFilter,
         companyFilter,
+        icpFilter,
         cityFilter,
         stateFilter,
         jobTitleFilter,
@@ -281,6 +312,7 @@ export default function LeadsClient({
           sourceFilter,
           ownerFilter,
           companyFilter,
+          icpFilter,
           cityFilter,
           stateFilter,
           jobTitleFilter,
@@ -326,6 +358,7 @@ export default function LeadsClient({
     sourceFilter,
     ownerFilter,
     companyFilter,
+    icpFilter,
     cityFilter,
     stateFilter,
     jobTitleFilter,
@@ -344,6 +377,7 @@ export default function LeadsClient({
     sourceFilter,
     ownerFilter,
     companyFilter,
+    icpFilter,
     cityFilter,
     stateFilter,
     jobTitleFilter,
@@ -393,6 +427,25 @@ export default function LeadsClient({
     return (
       <span className={`text-xs px-2 py-1 rounded-full font-medium ${bgColor}`}>
         {displayStatus}
+      </span>
+    );
+  };
+
+  // ICP Badge component
+  const IcpBadge = ({
+    title,
+    tagColor,
+  }: {
+    title: string | null;
+    tagColor: string | null;
+  }) => {
+    if (!title || !tagColor) return <span className="text-gray-400">-</span>;
+    return (
+      <span
+        className="inline-flex items-center px-2 py-1 rounded text-xs font-medium text-white"
+        style={{ backgroundColor: tagColor }}
+      >
+        {title}
       </span>
     );
   };
@@ -476,6 +529,19 @@ export default function LeadsClient({
           isMulti
         />
 
+        <Select
+          options={icps}
+          value={icps.filter((icp) => icpFilter.includes(icp.value))}
+          onChange={(selected) => {
+            setIcpFilter(selected?.map((icp) => icp.value) || []);
+          }}
+          placeholder="Select ICP Tag"
+          components={{
+            Option: CustomIcpOption,
+          }}
+          isMulti
+        />
+
         {/* Refresh Button */}
         <button
           onClick={refreshLeads}
@@ -491,6 +557,7 @@ export default function LeadsClient({
           statusFilter.length > 0 ||
           sourceFilter.length > 0 ||
           ownerFilter.length > 0 ||
+          icpFilter.length > 0 ||
           companyFilter ||
           cityFilter ||
           stateFilter ||
@@ -502,6 +569,7 @@ export default function LeadsClient({
               setStatusFilter([]);
               setSourceFilter([]);
               setOwnerFilter([]);
+              setIcpFilter([]);
               setCompanyFilter("");
               setCityFilter("");
               setStateFilter("");
@@ -675,6 +743,9 @@ export default function LeadsClient({
                     Company
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
+                    ICP Tag
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
                     Job Title
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
@@ -727,6 +798,12 @@ export default function LeadsClient({
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {lead.company || "-"}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <IcpBadge
+                        title={lead.icp_title}
+                        tagColor={lead.icp_tag_color}
+                      />
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {lead.job_title || "-"}

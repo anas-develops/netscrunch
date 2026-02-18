@@ -17,11 +17,20 @@ export type Lead = {
   state: string | null;
   zip_code: string | null;
   linked_in_url: string | null;
+  tagged_icp_id: string | null;
+  icp_title: string | null;
+  icp_tag_color: string | null;
 };
 
 export type Owner = {
   id: string;
   full_name: string;
+};
+
+export type IntendedCustomerProfile = {
+  id: string;
+  title: string;
+  tag_color: string;
 };
 
 export type Task = {
