@@ -4,11 +4,19 @@ export type Lead = {
   company: string | null;
   source: string;
   status: string;
+  prospect_id: string | null;
   owner_id: {
     full_name: string;
-  };
+  } | null;
   created_at: string;
-  prospect_id: string | null;
+  // Prospect fields from leads_extended view
+  job_title: string | null;
+  email: string | null;
+  phone: string | null;
+  city: string | null;
+  state: string | null;
+  zip_code: string | null;
+  linked_in_url: string | null;
 };
 
 export type Owner = {

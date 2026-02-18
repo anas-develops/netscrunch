@@ -338,7 +338,17 @@ export default function LeadsClient({
   // --- Reset to page 1 when filters change ---
   useEffect(() => {
     setCurrentPage(1);
-  }, [search, statusFilter, sourceFilter, ownerFilter, companyFilter, cityFilter, stateFilter, jobTitleFilter, zipCodeFilter]);
+  }, [
+    search,
+    statusFilter,
+    sourceFilter,
+    ownerFilter,
+    companyFilter,
+    cityFilter,
+    stateFilter,
+    jobTitleFilter,
+    zipCodeFilter,
+  ]);
 
   if (loading) {
     return (
@@ -638,7 +648,7 @@ export default function LeadsClient({
           No leads found. Try adjusting your filters.
         </div>
       ) : (
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto max-w-[75vw]">
           <div
             className={`overflow-x-auto bg-white rounded-lg border ${
               showBulkActions ? "rounded-t-none" : ""
@@ -663,6 +673,21 @@ export default function LeadsClient({
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
                     Company
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
+                    Job Title
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
+                    Email
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
+                    Phone
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
+                    City
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
+                    State
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
                     Status
@@ -704,6 +729,21 @@ export default function LeadsClient({
                       {lead.company || "-"}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
+                      {lead.job_title || "-"}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {lead.email || "-"}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {lead.phone || "-"}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {lead.city || "-"}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {lead.state || "-"}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
                       <StatusBadge status={lead.status} leadId={lead.id} />
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -723,6 +763,14 @@ export default function LeadsClient({
                         >
                           View
                         </Link>
+                        {lead.prospect_id && (
+                          <Link
+                            href={`/prospects/${lead.prospect_id}`}
+                            className="text-green-500 font-bold cursor-pointer hover:text-green-200"
+                          >
+                            View Prospect
+                          </Link>
+                        )}
                         <Link
                           href={`/leads/${lead.id}/edit`}
                           className="text-blue-500 font-bold cursor-pointer hover:text-blue-200"
