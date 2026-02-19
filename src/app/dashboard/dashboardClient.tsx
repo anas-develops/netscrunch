@@ -286,10 +286,7 @@ function SalesOverview({
         />
         <KpiCard
           title="Active Leads"
-          value={activeLeadsData.reduce(
-            (sum, item) => sum + item.count,
-            0,
-          )}
+          value={activeLeadsData.reduce((sum, item) => sum + item.count, 0)}
           color="text-blue-400"
         />
         <KpiCard
@@ -322,9 +319,7 @@ function SalesOverview({
         </ChartCard>
 
         <ChartCard
-          title={
-            viewMode === "personal" ? "My Deal Pipeline" : "Deal Pipeline"
-          }
+          title={viewMode === "personal" ? "My Deal Pipeline" : "Deal Pipeline"}
         >
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={dealData}>
@@ -363,7 +358,9 @@ function SalesOverview({
 
         <ChartCard
           title={
-            viewMode === "personal" ? "My Revenue by Stream" : "Revenue by Stream"
+            viewMode === "personal"
+              ? "My Revenue by Stream"
+              : "Revenue by Stream"
           }
         >
           {revenueData.some((item) => item.value > 0) ? (
@@ -404,9 +401,7 @@ function SalesOverview({
         </ChartCard>
 
         <ChartCard
-          title={
-            viewMode === "personal" ? "My Lead Status" : "Lead Status"
-          }
+          title={viewMode === "personal" ? "My Lead Status" : "Lead Status"}
         >
           <div className="space-y-3">
             {activeLeadsData.map((item) => (
@@ -522,9 +517,7 @@ function IndustryInsights({
 
       <ChartCard
         title={
-          viewMode === "personal"
-            ? "My Leads by Industry"
-            : "Leads by Industry"
+          viewMode === "personal" ? "My Leads by Industry" : "Leads by Industry"
         }
       >
         {leadsByIndustry.length > 0 ? (
@@ -621,9 +614,6 @@ function TeamPerformance({ metrics }: { metrics: Metric }) {
             <th className="px-4 py-3 text-right text-sm font-medium text-gray-400 uppercase">
               Pipeline Value
             </th>
-            <th className="px-4 py-3 text-right text-sm font-medium text-gray-400 uppercase">
-              Avg Response (hrs)
-            </th>
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-800">
@@ -642,9 +632,6 @@ function TeamPerformance({ metrics }: { metrics: Metric }) {
                 <td className="px-4 py-3 whitespace-nowrap text-right text-gray-300">
                   ${rep.total_value.toLocaleString()}
                 </td>
-                <td className="px-4 py-3 whitespace-nowrap text-right text-gray-300">
-                  {rep.avg_response_hours > 0 ? rep.avg_response_hours : "–"}
-                </td>
               </tr>
             ))
           ) : (
@@ -659,10 +646,10 @@ function TeamPerformance({ metrics }: { metrics: Metric }) {
 
       {/* Legend */}
       <div className="mt-6 text-sm text-gray-500">
-        <p>
+        {/* <p>
           💡 <strong>Response time</strong>: Manually entered by reps when
           updating lead status (MVP)
-        </p>
+        </p> */}
       </div>
     </div>
   );
