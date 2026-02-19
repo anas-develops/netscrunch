@@ -46,7 +46,7 @@ const COLORS = ["#4f46e5", "#0ea5e9", "#10b981", "#f59e0b", "#ef4444"];
 
 export function DashboardClient({ metrics }: { metrics: Metric }) {
   const [activeTab, setActiveTab] = useState<"overview" | "insights" | "team">(
-    "overview"
+    "overview",
   );
 
   return (
@@ -116,7 +116,7 @@ function SalesOverview({ metrics }: { metrics: Metric }) {
   return (
     <>
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         <KpiCard
           title="Overdue Tasks"
           value={metrics.task_summary.overdue}
@@ -128,10 +128,20 @@ function SalesOverview({ metrics }: { metrics: Metric }) {
           color="text-orange-400"
         />
         <KpiCard
+          title="Meetings Scheduled Today"
+          value={metrics.task_summary.due_today}
+          color="text-orange-400"
+        />
+        <KpiCard
+          title="Followups Due Today"
+          value={metrics.task_summary.due_today}
+          color="text-orange-400"
+        />
+        <KpiCard
           title="Active Leads"
           value={metrics.active_leads.reduce(
             (sum, item) => sum + item.count,
-            0
+            0,
           )}
           color="text-blue-400"
         />
@@ -248,7 +258,7 @@ function SalesOverview({ metrics }: { metrics: Metric }) {
                         (item.count /
                           Math.max(
                             ...metrics.active_leads.map((x) => x.count),
-                            1
+                            1,
                           )) *
                         100
                       }%`,

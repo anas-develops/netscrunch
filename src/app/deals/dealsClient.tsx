@@ -65,7 +65,7 @@ export default function DealsClient({
           sourceFilter,
           ownerFilter,
           PAGE_SIZE,
-          currentPage
+          currentPage,
         );
 
         setDeals(result as unknown as { deals: Deal[]; count: number });
@@ -202,83 +202,85 @@ export default function DealsClient({
           No deals found. Try adjusting your filters.
         </div>
       ) : (
-        <div className="overflow-x-auto bg-white rounded-lg border">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-900">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
-                  Deal
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
-                  Lead
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
-                  Stage
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
-                  Value
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
-                  Owner
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
-                  Close Date
-                </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-200 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-gray-700 divide-y divide-gray-200">
-              {deals.deals.map((deal) => (
-                <tr key={deal.id} className="hover:bg-gray-800">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <Briefcase className="h-5 w-5 text-gray-400 mr-2" />
-                      <span className="font-medium">{deal.name}</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {deal.lead_id && deal.lead_name ? (
-                      <Link
-                        href={`/leads/${deal.lead_id}`}
-                        className="text-blue-500 hover:underline"
-                      >
-                        {deal.lead_name}
-                      </Link>
-                    ) : (
-                      <span className="text-gray-400">Standalone</span>
-                    )}
-                    {deal.lead_company && (
-                      <div className="text-sm text-gray-400">
-                        {deal.lead_company}
-                      </div>
-                    )}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <StageBadge stage={deal.stage} />
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {deal.value ? `$${deal.value.toLocaleString()}` : "—"}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {deal.owner_name}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    {deal.close_date || "—"}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <Link
-                      href={`/deals/${deal.id}`}
-                      className="text-blue-500 hover:text-blue-200"
-                    >
-                      View
-                    </Link>
-                  </td>
+        <div className="overflow-x-auto max-w-[75vw]">
+          <div className="overflow-x-auto bg-white rounded-lg border">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-900">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
+                    Deal
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
+                    Lead
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
+                    Stage
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
+                    Value
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
+                    Owner
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">
+                    Close Date
+                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-200 uppercase tracking-wider">
+                    Actions
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="bg-gray-700 divide-y divide-gray-200">
+                {deals.deals.map((deal) => (
+                  <tr key={deal.id} className="hover:bg-gray-800">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <Briefcase className="h-5 w-5 text-gray-400 mr-2" />
+                        <span className="font-medium">{deal.name}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {deal.lead_id && deal.lead_name ? (
+                        <Link
+                          href={`/leads/${deal.lead_id}`}
+                          className="text-blue-500 hover:underline"
+                        >
+                          {deal.lead_name}
+                        </Link>
+                      ) : (
+                        <span className="text-gray-400">Standalone</span>
+                      )}
+                      {deal.lead_company && (
+                        <div className="text-sm text-gray-400">
+                          {deal.lead_company}
+                        </div>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <StageBadge stage={deal.stage} />
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {deal.value ? `$${deal.value.toLocaleString()}` : "—"}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {deal.owner_name}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      {deal.close_date || "—"}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <Link
+                        href={`/deals/${deal.id}`}
+                        className="text-blue-500 hover:text-blue-200"
+                      >
+                        View
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
