@@ -38,9 +38,21 @@ type Metric = {
     won_deals: number;
     total_value: number;
   }[];
+  personal_revenue_by_stream?: {
+    source: string;
+    active_leads: number;
+    won_deals: number;
+    total_value: number;
+  }[];
   // Add industry data (will come from server)
   won_deals_by_industry?: { industry: string; count: number; value: number }[];
   leads_by_industry?: { industry: string; count: number }[];
+  personal_won_deals_by_industry?: {
+    industry: string;
+    count: number;
+    value: number;
+  }[];
+  personal_leads_by_industry?: { industry: string; count: number }[];
   team_leads: { rep_id: string; rep_name: string; leads_handled: number }[];
   team_deals: {
     rep_id: string;
@@ -52,6 +64,13 @@ type Metric = {
     rep_id: string;
     rep_name: string;
     avg_response_hours: number;
+  }[];
+  // Personal view metrics
+  personal_active_leads?: { source: string; count: number }[];
+  personal_deal_pipeline?: {
+    stage: string;
+    count: number;
+    value: number;
   }[];
 };
 
@@ -183,10 +202,14 @@ export function DashboardClient({
 
       {/* Tab Content */}
       {activeTab === "overview" && (
-        <SalesOverview metrics={metrics} taskSummary={taskSummary} />
+        <SalesOverview
+          metrics={metrics}
+          taskSummary={taskSummary}
+          viewMode={viewMode}
+        />
       )}
       {activeTab === "insights" && isManager && viewMode === "manager" && (
-        <IndustryInsights metrics={metrics} />
+        <IndustryInsights metrics={metrics} viewMode={viewMode} />
       )}
       {activeTab === "team" && isManager && viewMode === "manager" && (
         <TeamPerformance metrics={metrics} />
@@ -199,22 +222,40 @@ export function DashboardClient({
 function SalesOverview({
   metrics,
   taskSummary,
+  viewMode,
 }: {
   metrics: Metric;
   taskSummary: Metric["task_summary"];
+  viewMode: "personal" | "manager";
 }) {
-  const leadData = metrics.active_leads.map((item) => ({
+  // Use personal or manager data based on view mode
+  const activeLeadsData =
+    viewMode === "personal" && metrics.personal_active_leads
+      ? metrics.personal_active_leads
+      : metrics.active_leads;
+
+  const dealPipelineData =
+    viewMode === "personal" && metrics.personal_deal_pipeline
+      ? metrics.personal_deal_pipeline
+      : metrics.deal_pipeline;
+
+  const revenueStreamData =
+    viewMode === "personal" && metrics.personal_revenue_by_stream
+      ? metrics.personal_revenue_by_stream
+      : metrics.revenue_by_stream;
+
+  const leadData = activeLeadsData.map((item) => ({
     name: item.source,
     leads: item.count,
   }));
 
-  const dealData = metrics.deal_pipeline.map((item) => ({
+  const dealData = dealPipelineData.map((item) => ({
     name: item.stage,
     deals: item.count,
     value: item.value,
   }));
 
-  const revenueData = metrics.revenue_by_stream.map((item) => ({
+  const revenueData = revenueStreamData.map((item) => ({
     name: item.source,
     value: item.total_value,
   }));
@@ -235,17 +276,17 @@ function SalesOverview({
         />
         <KpiCard
           title="Meetings Scheduled Today"
-          value={taskSummary.due_today}
+          value={taskSummary.meetings_due_today}
           color="text-orange-400"
         />
         <KpiCard
           title="Followups Due Today"
-          value={taskSummary.due_today}
+          value={taskSummary.followups_due_today}
           color="text-orange-400"
         />
         <KpiCard
           title="Active Leads"
-          value={metrics.active_leads.reduce(
+          value={activeLeadsData.reduce(
             (sum, item) => sum + item.count,
             0,
           )}
@@ -253,7 +294,7 @@ function SalesOverview({
         />
         <KpiCard
           title="Pipeline Value"
-          value={`$${metrics.deal_pipeline
+          value={`$${dealPipelineData
             .reduce((sum, item) => sum + item.value, 0)
             .toLocaleString()}`}
           color="text-green-400"
@@ -262,7 +303,13 @@ function SalesOverview({
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <ChartCard title="Active Leads by Source">
+        <ChartCard
+          title={
+            viewMode === "personal"
+              ? "My Active Leads by Source"
+              : "Active Leads by Source"
+          }
+        >
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={leadData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#444" />
@@ -274,7 +321,11 @@ function SalesOverview({
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title="Deal Pipeline">
+        <ChartCard
+          title={
+            viewMode === "personal" ? "My Deal Pipeline" : "Deal Pipeline"
+          }
+        >
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={dealData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#444" />
@@ -310,7 +361,11 @@ function SalesOverview({
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title="Revenue by Stream">
+        <ChartCard
+          title={
+            viewMode === "personal" ? "My Revenue by Stream" : "Revenue by Stream"
+          }
+        >
           {revenueData.some((item) => item.value > 0) ? (
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
@@ -348,9 +403,13 @@ function SalesOverview({
           )}
         </ChartCard>
 
-        <ChartCard title="Lead Status">
+        <ChartCard
+          title={
+            viewMode === "personal" ? "My Lead Status" : "Lead Status"
+          }
+        >
           <div className="space-y-3">
-            {metrics.active_leads.map((item) => (
+            {activeLeadsData.map((item) => (
               <div key={item.source}>
                 <div className="flex justify-between text-sm">
                   <span>{item.source}</span>
@@ -362,10 +421,7 @@ function SalesOverview({
                     style={{
                       width: `${
                         (item.count /
-                          Math.max(
-                            ...metrics.active_leads.map((x) => x.count),
-                            1,
-                          )) *
+                          Math.max(...activeLeadsData.map((x) => x.count), 1)) *
                         100
                       }%`,
                     }}
@@ -381,23 +437,47 @@ function SalesOverview({
 }
 
 // --- INDUSTRY INSIGHTS ---
-function IndustryInsights({ metrics }: { metrics: Metric }) {
+function IndustryInsights({
+  metrics,
+  viewMode,
+}: {
+  metrics: Metric;
+  viewMode: "personal" | "manager";
+}) {
+  // Use personal or manager data based on view mode
   const wonDealsData =
-    metrics.won_deals_by_industry?.map((item) => ({
-      name: item.industry,
-      deals: item.count,
-      value: item.value,
-    })) || [];
+    viewMode === "personal" && metrics.personal_won_deals_by_industry
+      ? metrics.personal_won_deals_by_industry.map((item) => ({
+          name: item.industry,
+          deals: item.count,
+          value: item.value,
+        }))
+      : metrics.won_deals_by_industry?.map((item) => ({
+          name: item.industry,
+          deals: item.count,
+          value: item.value,
+        })) || [];
 
   const leadsByIndustry =
-    metrics.leads_by_industry?.map((item) => ({
-      name: item.industry,
-      leads: item.count,
-    })) || [];
+    viewMode === "personal" && metrics.personal_leads_by_industry
+      ? metrics.personal_leads_by_industry.map((item) => ({
+          name: item.industry,
+          leads: item.count,
+        }))
+      : metrics.leads_by_industry?.map((item) => ({
+          name: item.industry,
+          leads: item.count,
+        })) || [];
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <ChartCard title="Won Deals by Industry">
+      <ChartCard
+        title={
+          viewMode === "personal"
+            ? "My Won Deals by Industry"
+            : "Won Deals by Industry"
+        }
+      >
         {wonDealsData.length > 0 ? (
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={wonDealsData}>
@@ -440,7 +520,13 @@ function IndustryInsights({ metrics }: { metrics: Metric }) {
         )}
       </ChartCard>
 
-      <ChartCard title="Leads by Industry">
+      <ChartCard
+        title={
+          viewMode === "personal"
+            ? "My Leads by Industry"
+            : "Leads by Industry"
+        }
+      >
         {leadsByIndustry.length > 0 ? (
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
