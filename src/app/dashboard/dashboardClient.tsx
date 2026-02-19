@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import {
   BarChart,
   Bar,
@@ -14,6 +15,7 @@ import {
   Cell,
   Legend,
 } from "recharts";
+import { TimePeriod } from "./actions";
 
 type Metric = {
   active_leads: { source: string; count: number }[];
@@ -55,19 +57,31 @@ type Metric = {
 
 const COLORS = ["#4f46e5", "#0ea5e9", "#10b981", "#f59e0b", "#ef4444"];
 
+const TIME_PERIOD_OPTIONS: { value: TimePeriod; label: string }[] = [
+  { value: "daily", label: "Daily" },
+  { value: "weekly", label: "Weekly" },
+  { value: "monthly", label: "Monthly" },
+  { value: "quarterly", label: "Quarterly" },
+];
+
 export function DashboardClient({
   metrics,
   userRole,
+  timePeriod: initialTimePeriod,
 }: {
   metrics: Metric;
   userRole: string;
+  timePeriod: TimePeriod;
 }) {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<"overview" | "insights" | "team">(
     "overview",
   );
   const [viewMode, setViewMode] = useState<"personal" | "manager">(
     userRole === "manager" || userRole === "admin" ? "manager" : "personal",
   );
+  const [timePeriod, setTimePeriod] = useState<TimePeriod>(initialTimePeriod);
+  const [isPending, startTransition] = useTransition();
 
   const isManager = userRole === "manager" || userRole === "admin";
 
@@ -77,25 +91,56 @@ export function DashboardClient({
       ? metrics.personal_task_summary
       : metrics.task_summary;
 
+  const handleTimePeriodChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newPeriod = e.target.value as TimePeriod;
+    setTimePeriod(newPeriod);
+    startTransition(() => {
+      // Update URL search params and navigate
+      const params = new URLSearchParams(window.location.search);
+      params.set("time_period", newPeriod);
+      router.push(`?${params.toString()}`);
+    });
+  };
+
   return (
     <div className="p-4 md:p-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
         <h1 className="text-2xl md:text-3xl font-bold">Sales Dashboard</h1>
-        {isManager && (
+        <div className="flex flex-wrap items-center gap-4">
+          {/* Time Period Dropdown - Visible to all users */}
           <div className="flex items-center gap-2">
-            <label className="text-sm text-gray-400">View:</label>
+            <label className="text-sm text-gray-400">Time Period:</label>
             <select
-              value={viewMode}
-              onChange={(e) =>
-                setViewMode(e.target.value as "personal" | "manager")
-              }
-              className="bg-gray-800 border border-gray-700 rounded px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-blue-500"
+              value={timePeriod}
+              onChange={handleTimePeriodChange}
+              disabled={isPending}
+              className="bg-gray-800 border border-gray-700 rounded px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-blue-500 disabled:opacity-50"
             >
-              <option value="personal">Personal View</option>
-              <option value="manager">Manager View</option>
+              {TIME_PERIOD_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
             </select>
           </div>
-        )}
+
+          {/* View Mode Dropdown - Only for managers */}
+          {isManager && (
+            <div className="flex items-center gap-2">
+              <label className="text-sm text-gray-400">View:</label>
+              <select
+                value={viewMode}
+                onChange={(e) =>
+                  setViewMode(e.target.value as "personal" | "manager")
+                }
+                className="bg-gray-800 border border-gray-700 rounded px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-blue-500"
+              >
+                <option value="personal">Personal View</option>
+                <option value="manager">Manager View</option>
+              </select>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Tabs */}
