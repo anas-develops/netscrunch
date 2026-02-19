@@ -17,14 +17,15 @@ export default async function DashboardPage() {
     .eq("id", user.id)
     .single();
 
-  //   // Only admins can view full dashboard
-  //   if (profile?.role !== "admin") {
-  //     // Redirect sales reps to /tasks, managers to team view
-  //     redirect(profile?.role === "manager" ? "/tasks?view=team" : "/tasks");
-  //   }
-
   // Fetch dashboard metrics
-  const { data: metrics } = await supabase.rpc("get_dashboard_metrics");
+  const { data: metrics } = await supabase.rpc("get_dashboard_metrics", {
+    time_period: "weekly",
+  });
 
-  return <DashboardClient metrics={metrics} />;
+  return (
+    <DashboardClient
+      metrics={metrics}
+      userRole={profile?.role || "sales_rep"}
+    />
+  );
 }

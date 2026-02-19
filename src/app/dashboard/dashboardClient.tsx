@@ -18,7 +18,18 @@ import {
 type Metric = {
   active_leads: { source: string; count: number }[];
   deal_pipeline: { stage: string; count: number; value: number }[];
-  task_summary: { overdue: number; due_today: number };
+  task_summary: {
+    overdue: number;
+    due_today: number;
+    followups_due_today: number;
+    meetings_due_today: number;
+  };
+  personal_task_summary?: {
+    overdue: number;
+    due_today: number;
+    followups_due_today: number;
+    meetings_due_today: number;
+  };
   revenue_by_stream: {
     source: string;
     active_leads: number;
@@ -44,14 +55,48 @@ type Metric = {
 
 const COLORS = ["#4f46e5", "#0ea5e9", "#10b981", "#f59e0b", "#ef4444"];
 
-export function DashboardClient({ metrics }: { metrics: Metric }) {
+export function DashboardClient({
+  metrics,
+  userRole,
+}: {
+  metrics: Metric;
+  userRole: string;
+}) {
   const [activeTab, setActiveTab] = useState<"overview" | "insights" | "team">(
     "overview",
   );
+  const [viewMode, setViewMode] = useState<"personal" | "manager">(
+    userRole === "manager" || userRole === "admin" ? "manager" : "personal",
+  );
+
+  const isManager = userRole === "manager" || userRole === "admin";
+
+  // Use personal or manager task summary based on view mode
+  const taskSummary: Metric["task_summary"] =
+    viewMode === "personal" && metrics.personal_task_summary
+      ? metrics.personal_task_summary
+      : metrics.task_summary;
 
   return (
     <div className="p-4 md:p-6">
-      <h1 className="text-2xl md:text-3xl font-bold mb-6">Sales Dashboard</h1>
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+        <h1 className="text-2xl md:text-3xl font-bold">Sales Dashboard</h1>
+        {isManager && (
+          <div className="flex items-center gap-2">
+            <label className="text-sm text-gray-400">View:</label>
+            <select
+              value={viewMode}
+              onChange={(e) =>
+                setViewMode(e.target.value as "personal" | "manager")
+              }
+              className="bg-gray-800 border border-gray-700 rounded px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-blue-500"
+            >
+              <option value="personal">Personal View</option>
+              <option value="manager">Manager View</option>
+            </select>
+          </div>
+        )}
+      </div>
 
       {/* Tabs */}
       <div className="flex border-b border-gray-700 mb-6">
@@ -65,38 +110,54 @@ export function DashboardClient({ metrics }: { metrics: Metric }) {
         >
           Sales Overview
         </button>
-        <button
-          onClick={() => setActiveTab("insights")}
-          className={`px-4 py-2 font-medium cursor-pointer ${
-            activeTab === "insights"
-              ? "text-blue-400 border-b-2 border-blue-400"
-              : "text-gray-400 hover:text-gray-300"
-          }`}
-        >
-          Industry Insights
-        </button>
-        <button
-          onClick={() => setActiveTab("team")}
-          className={`px-4 py-2 font-medium cursor-pointer ${
-            activeTab === "team"
-              ? "text-blue-400 border-b-2 border-blue-400"
-              : "text-gray-400 hover:text-gray-300"
-          }`}
-        >
-          Team Performance
-        </button>
+        {isManager && viewMode === "manager" && (
+          <button
+            onClick={() => setActiveTab("insights")}
+            className={`px-4 py-2 font-medium cursor-pointer ${
+              activeTab === "insights"
+                ? "text-blue-400 border-b-2 border-blue-400"
+                : "text-gray-400 hover:text-gray-300"
+            }`}
+          >
+            Industry Insights
+          </button>
+        )}
+        {isManager && viewMode === "manager" && (
+          <button
+            onClick={() => setActiveTab("team")}
+            className={`px-4 py-2 font-medium cursor-pointer ${
+              activeTab === "team"
+                ? "text-blue-400 border-b-2 border-blue-400"
+                : "text-gray-400 hover:text-gray-300"
+            }`}
+          >
+            Team Performance
+          </button>
+        )}
       </div>
 
       {/* Tab Content */}
-      {activeTab === "overview" && <SalesOverview metrics={metrics} />}
-      {activeTab === "insights" && <IndustryInsights metrics={metrics} />}
-      {activeTab === "team" && <TeamPerformance metrics={metrics} />}
+      {activeTab === "overview" && (
+        <SalesOverview metrics={metrics} taskSummary={taskSummary} />
+      )}
+      {activeTab === "insights" && isManager && viewMode === "manager" && (
+        <IndustryInsights metrics={metrics} />
+      )}
+      {activeTab === "team" && isManager && viewMode === "manager" && (
+        <TeamPerformance metrics={metrics} />
+      )}
     </div>
   );
 }
 
 // --- SALES OVERVIEW (your existing UI) ---
-function SalesOverview({ metrics }: { metrics: Metric }) {
+function SalesOverview({
+  metrics,
+  taskSummary,
+}: {
+  metrics: Metric;
+  taskSummary: Metric["task_summary"];
+}) {
   const leadData = metrics.active_leads.map((item) => ({
     name: item.source,
     leads: item.count,
@@ -119,22 +180,22 @@ function SalesOverview({ metrics }: { metrics: Metric }) {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         <KpiCard
           title="Overdue Tasks"
-          value={metrics.task_summary.overdue}
+          value={taskSummary.overdue}
           color="text-red-400"
         />
         <KpiCard
           title="Tasks Due Today"
-          value={metrics.task_summary.due_today}
+          value={taskSummary.due_today}
           color="text-orange-400"
         />
         <KpiCard
           title="Meetings Scheduled Today"
-          value={metrics.task_summary.due_today}
+          value={taskSummary.due_today}
           color="text-orange-400"
         />
         <KpiCard
           title="Followups Due Today"
-          value={metrics.task_summary.due_today}
+          value={taskSummary.due_today}
           color="text-orange-400"
         />
         <KpiCard
