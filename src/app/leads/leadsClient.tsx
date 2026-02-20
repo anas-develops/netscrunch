@@ -52,17 +52,9 @@ const clearPendingUpdates = () => {
 };
 
 export default function LeadsClient({
-  fetchData,
   fetchLeads,
   initialData,
 }: {
-  fetchData: () => Promise<
-    | {
-        id: any;
-        full_name: any;
-      }[]
-    | null
-  >;
   fetchLeads: (
     search?: string | null,
     statusFilter?: string[] | null,
@@ -83,13 +75,11 @@ export default function LeadsClient({
   initialData: {
     leads: Lead[];
     owners: Owner[] | null;
-    icps: Array<
-      IntendedCustomerProfile & {
-        value: string;
-        label: string;
-        tag_color: string;
-      }
-    > | null;
+    icps: Array<{
+      value: string;
+      label: string;
+      tag_color: string;
+    }> | null;
     count: number;
   };
 }) {
