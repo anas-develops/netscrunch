@@ -54,12 +54,19 @@ type Metric = {
   }[];
   personal_leads_by_industry?: { industry: string; count: number }[];
   team_leads: { rep_id: string; rep_name: string; leads_handled: number }[];
+  personal_leads: { rep_id: string; rep_name: string; leads_handled: number };
   team_deals: {
     rep_id: string;
     rep_name: string;
     deals_closed: number;
     total_value: number;
   }[];
+  personal_deals: {
+    rep_id: string;
+    rep_name: string;
+    deals_closed: number;
+    total_value: number;
+  };
   team_response: {
     rep_id: string;
     rep_name: string;
@@ -86,10 +93,12 @@ const TIME_PERIOD_OPTIONS: { value: TimePeriod; label: string }[] = [
 export function DashboardClient({
   metrics,
   userRole,
+  userName,
   timePeriod: initialTimePeriod,
 }: {
   metrics: Metric;
   userRole: string;
+  userName: string;
   timePeriod: TimePeriod;
 }) {
   const router = useRouter();
@@ -206,6 +215,7 @@ export function DashboardClient({
           metrics={metrics}
           taskSummary={taskSummary}
           viewMode={viewMode}
+          userName={userName}
         />
       )}
       {activeTab === "insights" && isManager && viewMode === "manager" && (
@@ -223,10 +233,12 @@ function SalesOverview({
   metrics,
   taskSummary,
   viewMode,
+  userName,
 }: {
   metrics: Metric;
   taskSummary: Metric["task_summary"];
   viewMode: "personal" | "manager";
+  userName: string;
 }) {
   // Use personal or manager data based on view mode
   const activeLeadsData =
@@ -264,6 +276,25 @@ function SalesOverview({
     <>
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        {viewMode === "personal" && (
+          <>
+            <KpiCard
+              title="Name"
+              value={metrics.personal_deals?.rep_name || userName}
+              color="text-gray-200"
+            />
+            <KpiCard
+              title="Leads Handled"
+              value={metrics.personal_leads?.leads_handled || 0}
+              color="text-green-400"
+            />
+            <KpiCard
+              title="Deals Closed"
+              value={metrics.personal_deals?.deals_closed || 0}
+              color="text-green-400"
+            />
+          </>
+        )}
         <KpiCard
           title="Overdue Tasks"
           value={taskSummary.overdue}

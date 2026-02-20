@@ -18,7 +18,7 @@ export default async function DashboardPage({
   // Fetch user role
   const { data: profile } = await supabase
     .from("profiles")
-    .select("role")
+    .select("role, full_name")
     .eq("id", user.id)
     .single();
 
@@ -31,10 +31,13 @@ export default async function DashboardPage({
     time_period: timePeriod,
   });
 
+  console.log("metrics", metrics);
+
   return (
     <DashboardClient
       metrics={metrics}
       userRole={profile?.role || "sales_rep"}
+      userName={profile?.full_name || "-"}
       timePeriod={timePeriod}
     />
   );

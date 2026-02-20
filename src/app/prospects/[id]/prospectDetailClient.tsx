@@ -235,7 +235,7 @@ export default function ProspectDetailClient({
       </div>
 
       {/* Actions */}
-      <div className="border rounded p-4">
+      {/* <div className="border rounded p-4">
         <h2 className="font-semibold mb-4">Actions</h2>
         <div className="flex gap-4">
           <button
@@ -245,18 +245,12 @@ export default function ProspectDetailClient({
             Reassign Prospect
           </button>
         </div>
-      </div>
+      </div> */}
 
       {/* Tasks Section */}
       <div className="mb-8 mt-8">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold">Tasks & Follow-ups</h2>
-          <Link
-            href={`/prospects/${prospect.id}/tasks/new`}
-            className="text-green-600 hover:underline"
-          >
-            + New Task
-          </Link>
         </div>
 
         {/* Quick Add Form */}
