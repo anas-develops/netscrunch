@@ -12,7 +12,6 @@ export default async function LeadsPage() {
 
   return (
     <LeadsClient
-      fetchData={fetchData}
       fetchLeads={fetchLeads}
       initialData={{
         count: leads.count,

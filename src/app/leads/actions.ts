@@ -154,7 +154,7 @@ export async function fetchLeads(
 
 export async function fetchData(): Promise<{
   ownerData: { id: any; full_name: any }[] | null;
-  icpData: Array<IntendedCustomerProfile & { value: string; label: string }>;
+  icpData: Array<{ value: string; label: string; tag_color: string }>;
 }> {
   const supabaseServer = await createClient();
   const { data: ownerData } = await supabaseServer
